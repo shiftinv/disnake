@@ -59,6 +59,14 @@ class _SelectMenuOptional(TypedDict, total=False):
     disabled: bool
 
 
+class _SelectMenu(_SelectMenuOptional):
+    custom_id: str
+
+
+class BaseSelectMenu(_SelectMenu):
+    type: Literal[3, 5, 6, 7, 8]
+
+
 class _SelectOptionsOptional(TypedDict, total=False):
     description: str
     emoji: PartialEmoji
@@ -70,9 +78,8 @@ class SelectOption(_SelectOptionsOptional):
     default: bool
 
 
-class SelectMenu(_SelectMenuOptional):
+class StringSelectMenu(_SelectMenu):
     type: Literal[3]
-    custom_id: str
     options: List[SelectOption]
 
 
@@ -97,4 +104,4 @@ class TextInput(_TextInputOptional):
     label: str
 
 
-Component = Union[ActionRow, ButtonComponent, SelectMenu, TextInput]
+Component = Union[ActionRow, ButtonComponent, StringSelectMenu, TextInput]
