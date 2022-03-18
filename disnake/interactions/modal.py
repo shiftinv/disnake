@@ -96,7 +96,7 @@ class ModalInteraction(Interaction):
     def walk_components(self) -> Generator[NestedComponent, None, None]:
         """Returns a generator that yields components from action rows one by one.
 
-        :return type: Generator[Union[:class:`Button`, :class:`SelectMenu`, :class:`TextInput`], None, None]
+        :return type: Generator[Union[:class:`Button`, :class:`BaseSelectMenu`, :class:`TextInput`], None, None]
         """
         for action_row in self.data._components:
             yield from action_row.children

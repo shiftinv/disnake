@@ -85,7 +85,7 @@ class ActionRow:
 
     @property
     def children(self) -> List[NestedComponent]:
-        """List[Union[:class:`~disnake.Button`, :class:`~disnake.SelectMenu`, :class:`~disnake.TextInput`]]: The components of this row."""
+        """List[Union[:class:`~disnake.Button`, :class:`~disnake.BaseSelectMenu`, :class:`~disnake.TextInput`]]: The components of this row."""
         return self._underlying.children
 
     @children.setter

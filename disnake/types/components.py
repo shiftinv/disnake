@@ -83,6 +83,9 @@ class StringSelectMenu(_SelectMenu):
     options: List[SelectOption]
 
 
+AnySelectMenu = Union[StringSelectMenu]  # type: ignore  # TODO
+
+
 class Modal(TypedDict):
     title: str
     custom_id: str
@@ -104,4 +107,4 @@ class TextInput(_TextInputOptional):
     label: str
 
 
-Component = Union[ActionRow, ButtonComponent, StringSelectMenu, TextInput]
+Component = Union[ActionRow, ButtonComponent, AnySelectMenu, TextInput]
