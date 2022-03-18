@@ -211,6 +211,8 @@ class ActionRow:
             )
         )
 
+    add_select = add_string_select  # backwards compatibility
+
     def add_text_input(
         self,
         *,

@@ -1738,9 +1738,12 @@ of :class:`enum.Enum`.
     .. attribute:: button
 
         Represents a button component.
-    .. attribute:: select
+    .. attribute:: string_select
 
         Represents a select component.
+    .. attribute:: select
+
+        An alias for :attr:`string_select`.
     .. attribute:: text_input
 
         Represents a text input component.
@@ -4087,6 +4090,11 @@ StringSelectMenu
     :members:
     :inherited-members:
 
+SelectMenu
+~~~~~~~~~~
+
+.. autoclass:: SelectMenu()
+
 TextInput
 ~~~~~~~~~
 
@@ -4908,6 +4916,11 @@ ActionRow
 
 .. autoclass:: disnake.ui.ActionRow
     :members:
+    :exclude-members: add_select
+
+    .. method:: add_select
+
+        alias of :func:`~disnake.ui.ActionRow.add_string_select`
 
 Item
 ~~~~~~~
@@ -4955,6 +4968,15 @@ StringSelect
     :inherited-members:
 
 .. autofunction:: disnake.ui.string_select
+
+Select
+~~~~~~~~~~~~
+
+.. autoclass:: disnake.ui.Select
+
+.. function:: select
+
+    alias of :func:`~disnake.ui.string_select`
 
 Modal
 ~~~~~

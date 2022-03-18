@@ -62,6 +62,7 @@ __all__ = (
     "Button",
     "BaseSelectMenu",
     "StringSelectMenu",
+    "SelectMenu",
     "SelectOption",
     "TextInput",
 )
@@ -320,6 +321,9 @@ class StringSelectMenu(BaseSelectMenu):
         payload = cast("StringSelectMenuPayload", super().to_dict())
         payload["options"] = [op.to_dict() for op in self.options]
         return payload
+
+
+SelectMenu = StringSelectMenu  # backwards compatibility
 
 
 class SelectOption:
