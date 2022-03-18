@@ -31,7 +31,7 @@ from ..enums import ButtonStyle, ComponentType, TextInputStyle
 from ..utils import MISSING
 from .button import Button
 from .item import WrappedComponent
-from .select import Select
+from .select import StringSelect
 from .text_input import TextInput
 
 __all__ = ("ActionRow",)
@@ -162,7 +162,7 @@ class ActionRow:
             )
         )
 
-    def add_select(
+    def add_string_select(
         self,
         *,
         custom_id: str = MISSING,
@@ -174,7 +174,7 @@ class ActionRow:
     ):
         """Adds a select menu to the action row.
 
-        To append a pre-existing :class:`~disnake.ui.Select` use the
+        To append a pre-existing :class:`~disnake.ui.StringSelect` use the
         :meth:`append_item` method instead.
 
         Parameters
@@ -201,7 +201,7 @@ class ActionRow:
             The width of the action row exceeds 5.
         """
         self.append_item(
-            Select(
+            StringSelect(
                 custom_id=custom_id,
                 placeholder=placeholder,
                 min_values=min_values,

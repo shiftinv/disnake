@@ -4069,8 +4069,17 @@ Button
     :members:
     :inherited-members:
 
+BaseSelectMenu
+~~~~~~~~~~~~~~
+
+.. attributetable:: BaseSelectMenu
+
+.. autoclass:: BaseSelectMenu()
+    :members:
+    :inherited-members:
+
 StringSelectMenu
-~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 .. attributetable:: StringSelectMenu
 
@@ -4927,16 +4936,25 @@ Button
 
 .. autofunction:: disnake.ui.button
 
-Select
-~~~~~~~
+BaseSelect
+~~~~~~~~~~
 
-.. attributetable:: disnake.ui.Select
+.. attributetable:: disnake.ui.BaseSelect
 
-.. autoclass:: disnake.ui.Select
+.. autoclass:: disnake.ui.BaseSelect
     :members:
     :inherited-members:
 
-.. autofunction:: disnake.ui.select
+StringSelect
+~~~~~~~~~~~~
+
+.. attributetable:: disnake.ui.StringSelect
+
+.. autoclass:: disnake.ui.StringSelect
+    :members:
+    :inherited-members:
+
+.. autofunction:: disnake.ui.string_select
 
 Modal
 ~~~~~
