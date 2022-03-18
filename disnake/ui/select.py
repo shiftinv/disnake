@@ -82,8 +82,6 @@ class BaseSelect(Generic[SelectMenuT, SelectValueT, V], Item[V], ABC):
 
     This is usually represented as a drop down menu.
 
-    In order to get the selected items that the user has chosen, use :attr:`BaseSelect.values`.
-
     This isn't meant to be used directly, instead use one of the concrete select menu types:
 
     - :class:`disnake.ui.StringSelect`
@@ -179,7 +177,6 @@ class BaseSelect(Generic[SelectMenuT, SelectValueT, V], Item[V], ABC):
 
     @property
     def values(self) -> List[SelectValueT]:
-        """List[:class:`str`]: A list of values that have been selected by the user."""
         return self._selected_values
 
     @property
@@ -241,6 +238,11 @@ class StringSelect(BaseSelect[StringSelectMenu, str, V]):
         like to control the relative positioning of the row then passing an index is advised.
         For example, row=1 will show up before row=2. Defaults to ``None``, which is automatic
         ordering. The row number must be between 0 and 4 (i.e. zero indexed).
+
+    Attributes
+    ----------
+    values: List[:class:`str`]
+        A list of values that have been selected by the user.
     """
 
     def __init__(
