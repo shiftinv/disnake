@@ -30,11 +30,11 @@ import os
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
     Generic,
     List,
+    NoReturn,
     Optional,
     Tuple,
     Type,
@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 
 V = TypeVar("V", bound="View", covariant=True)
 SelectMenuT = TypeVar("SelectMenuT", bound=AnySelectMenu)
-SelectValueT = TypeVar("SelectValueT", str, Any)  # TODO
+SelectValueT = TypeVar("SelectValueT", str, NoReturn)  # TODO
 
 
 def _parse_select_options(
