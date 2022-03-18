@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from typing import List, Literal, TypedDict, Union
 
+from .channel import ChannelType
 from .emoji import PartialEmoji
 
 ComponentType = Literal[1, 2, 3, 4, 5, 6, 7, 8]
@@ -83,7 +84,26 @@ class StringSelectMenu(_SelectMenu):
     options: List[SelectOption]
 
 
-AnySelectMenu = Union[StringSelectMenu]  # type: ignore  # TODO
+class UserSelectMenu(_SelectMenu):
+    type: Literal[5]
+
+
+class RoleSelectMenu(_SelectMenu):
+    type: Literal[6]
+
+
+class MentionableSelectMenu(_SelectMenu):
+    type: Literal[7]
+
+
+class ChannelSelectMenu(_SelectMenu):
+    type: Literal[8]
+    channel_types: List[ChannelType]
+
+
+AnySelectMenu = Union[
+    StringSelectMenu, UserSelectMenu, RoleSelectMenu, MentionableSelectMenu, ChannelSelectMenu
+]
 
 
 class Modal(TypedDict):
