@@ -413,7 +413,7 @@ class UserSelect(BaseSelect[UserSelectMenu, "Member", V]):
 
     Attributes
     ----------
-    values: List[:class:`Member`]
+    values: List[:class:`.Member`]
         A list of users that have been selected by the user.
     """
 
@@ -479,7 +479,7 @@ class RoleSelect(BaseSelect[RoleSelectMenu, "Role", V]):
 
     Attributes
     ----------
-    values: List[:class:`Role`]
+    values: List[:class:`.Role`]
         A list of roles that have been selected by the user.
     """
 
@@ -545,7 +545,7 @@ class MentionableSelect(BaseSelect[MentionableSelectMenu, "Union[Member, Role]",
 
     Attributes
     ----------
-    values: List[Union[:class:`Member`, :class:`Role`]]
+    values: List[Union[:class:`.Member`, :class:`.Role`]]
         A list of users and/or roles that have been selected by the user.
     """
 
@@ -608,13 +608,13 @@ class ChannelSelect(BaseSelect[ChannelSelectMenu, "GuildChannel", V]):
         like to control the relative positioning of the row then passing an index is advised.
         For example, row=1 will show up before row=2. Defaults to ``None``, which is automatic
         ordering. The row number must be between 0 and 4 (i.e. zero indexed).
-    channel_types: Optional[List[:class:`ChannelType`]]
+    channel_types: Optional[List[:class:`.ChannelType`]]
         The list of channel types that can be selected in this select menu.
         Defaults to all types.
 
     Attributes
     ----------
-    values: List[:class:`GuildChannel`]
+    values: List[:class:`.abc.GuildChannel`]
         A list of channels that have been selected by the user.
     """
 
@@ -944,7 +944,7 @@ def channel_select(
         Defaults to 1 and must be between 1 and 25.
     disabled: :class:`bool`
         Whether the select is disabled. Defaults to ``False``.
-    channel_types: Optional[List[:class:`ChannelType`]]
+    channel_types: Optional[List[:class:`.ChannelType`]]
         The list of channel types that can be selected in this select menu.
         Defaults to all types.
     """
