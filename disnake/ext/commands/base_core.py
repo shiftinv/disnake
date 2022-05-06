@@ -100,6 +100,10 @@ def wrap_callback(coro):
     return wrapped
 
 
+async def _respond_guild_only(inter: ApplicationCommandInteraction) -> None:
+    await inter.response.send_message("This command cannot be used in DMs", ephemeral=True)
+
+
 class InvokableApplicationCommand(ABC):
     """A base class that implements the protocol for a bot application command.
 
@@ -401,6 +405,10 @@ class InvokableApplicationCommand(ABC):
         """
         This method isn't really usable in this class, but it's usable in subclasses.
         """
+        if self._guild_only and not inter.guild_id:
+            await _respond_guild_only(inter)
+            return
+
         await self.prepare(inter)
 
         try:

@@ -44,7 +44,7 @@ from disnake.i18n import Localized
 from disnake.interactions import ApplicationCommandInteraction
 from disnake.permissions import Permissions
 
-from .base_core import InvokableApplicationCommand, _get_overridden_method
+from .base_core import InvokableApplicationCommand, _get_overridden_method, _respond_guild_only
 from .errors import *
 from .params import call_param_func, expand_params
 
@@ -313,6 +313,10 @@ class SubCommand(InvokableApplicationCommand):
         return await _call_autocompleter(self, param, inter, user_input)
 
     async def invoke(self, inter: ApplicationCommandInteraction, *args, **kwargs) -> None:
+        if self._guild_only and not inter.guild_id:
+            await _respond_guild_only(inter)
+            return
+
         for k, v in self.connectors.items():
             if k in kwargs:
                 kwargs[v] = kwargs.pop(k)
