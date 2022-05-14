@@ -1793,7 +1793,7 @@ class Client:
         :class:`.Guild`
             The guild with the guild data parsed.
         """
-        return GuildIterator(self, limit=limit, before=before, after=after)
+        return GuildIterator(client=self, limit=limit, before=before, after=after)
 
     async def fetch_template(self, code: Union[Template, str]) -> Template:
         """|coro|

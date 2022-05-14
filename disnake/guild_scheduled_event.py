@@ -703,7 +703,7 @@ class GuildScheduledEvent(Hashable):
         from .iterators import GuildScheduledEventUserIterator  # cyclic import
 
         return GuildScheduledEventUserIterator(
-            self,
+            event=self,
             limit=limit,
             with_members=with_members,
             before=before,

@@ -148,12 +148,16 @@ class Reaction:
         await self.message.clear_reaction(self.emoji)
 
     def users(
-        self, *, limit: Optional[int] = None, after: Optional[Snowflake] = None
+        self,
+        *,
+        limit: Optional[int] = None,
+        before: Optional[Snowflake] = None,
+        after: Optional[Snowflake] = None,
     ) -> ReactionIterator:
         """Returns an :class:`AsyncIterator` representing the users that have reacted to the message.
 
-        The ``after`` parameter must represent a member
-        and meet the :class:`abc.Snowflake` abc.
+        The ``before`` and ``after`` parameters must represent a member
+        and meet the :class:`~abc.Snowflake` abc, if provided.
 
         Examples
         --------
@@ -176,8 +180,13 @@ class Reaction:
             The maximum number of results to return.
             If not provided, returns all the users who
             reacted to the message.
-        after: Optional[:class:`abc.Snowflake`]
-            For pagination, reactions are sorted by member.
+        before: Optional[:class:`~disnake.abc.Snowflake`]
+            Retrieve reactions from users before this user.
+
+            .. versionadded:: 2.6
+
+        after: Optional[:class:`~disnake.abc.Snowflake`]
+            Retrieve reactions from users after this user.
 
         Raises
         ------
@@ -200,4 +209,10 @@ class Reaction:
         if limit is None:
             limit = self.count
 
-        return ReactionIterator(self.message, emoji, limit, after)
+        return ReactionIterator(
+            message=self.message,
+            emoji=emoji,
+            limit=limit,
+            before=before,
+            after=after,
+        )

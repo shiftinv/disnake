@@ -1748,7 +1748,7 @@ class Messageable:
         before: Optional[SnowflakeTime] = None,
         after: Optional[SnowflakeTime] = None,
         around: Optional[SnowflakeTime] = None,
-        oldest_first: Optional[bool] = None,
+        oldest_first: Optional[bool] = None,  # TODO
     ) -> HistoryIterator:
         """Returns an :class:`.AsyncIterator` that enables receiving the destination's message history.
 
@@ -1810,7 +1810,12 @@ class Messageable:
         from .iterators import HistoryIterator  # cyclic import
 
         return HistoryIterator(
-            self, limit=limit, before=before, after=after, around=around, oldest_first=oldest_first
+            messageable=self,
+            limit=limit,
+            before=before,
+            after=after,
+            around=around,
+            # oldest_first=oldest_first
         )
 
 

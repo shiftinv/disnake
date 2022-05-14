@@ -930,6 +930,7 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         joined: bool = False,
         limit: Optional[int] = 50,
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
+        after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ) -> ArchivedThreadIterator:
         """Returns an :class:`~disnake.AsyncIterator` that iterates over all archived threads in the channel.
 
@@ -946,11 +947,16 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
             that this would make it a slow operation.
         before: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
             Retrieve archived channels before the given date or ID.
+        after: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
+            Retrieve archived channels after the given date or ID.
+
+            .. versionadded:: 2.6
+
         private: :class:`bool`
             Whether to retrieve private archived threads.
         joined: :class:`bool`
             Whether to retrieve private archived threads that you've joined.
-            You cannot set ``joined`` to ``True`` and ``private`` to ``False``.
+            You cannot set ``joined=True`` and ``private=False``.
 
         Raises
         ------
@@ -965,7 +971,13 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
             The archived threads.
         """
         return ArchivedThreadIterator(
-            self.id, self.guild, limit=limit, joined=joined, private=private, before=before
+            channel_id=self.id,
+            guild=self.guild,
+            limit=limit,
+            joined=joined,
+            private=private,
+            before=before,
+            after=after,
         )
 
 
@@ -3159,6 +3171,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         *,
         limit: Optional[int] = 50,
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
+        after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ) -> ArchivedThreadIterator:
         """Returns an :class:`~disnake.AsyncIterator` that iterates over all archived threads in the channel.
 
@@ -3172,6 +3185,10 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
             that this would make it a slow operation.
         before: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
             Retrieve archived channels before the given date or ID.
+        after: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
+            Retrieve archived channels after the given date or ID.
+
+            .. versionadded:: 2.6
 
         Raises
         ------
@@ -3186,7 +3203,13 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
             The archived threads.
         """
         return ArchivedThreadIterator(
-            self.id, self.guild, limit=limit, joined=False, private=False, before=before
+            channel_id=self.id,
+            guild=self.guild,
+            limit=limit,
+            joined=False,
+            private=False,
+            before=before,
+            after=after,
         )
 
     async def webhooks(self) -> List[Webhook]:

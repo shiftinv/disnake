@@ -2481,9 +2481,12 @@ class Guild(Hashable):
         data = await self._state.http.edit_guild_welcome_screen(self.id, reason=reason, **payload)
         return WelcomeScreen(state=self._state, data=data, guild=self)
 
-    # TODO: Remove Optional typing here when async iterators are refactored
     def fetch_members(
-        self, *, limit: int = 1000, after: Optional[SnowflakeTime] = None
+        self,
+        *,
+        limit: int = 1000,
+        before: Optional[SnowflakeTime] = None,
+        after: Optional[SnowflakeTime] = None,
     ) -> MemberIterator:
         """Retrieves an :class:`.AsyncIterator` that enables receiving the guild's members. In order to use this,
         :meth:`Intents.members` must be enabled.
@@ -2501,6 +2504,13 @@ class Guild(Hashable):
         limit: Optional[:class:`int`]
             The number of members to retrieve. Defaults to 1000.
             Pass ``None`` to fetch all members. Note that this is potentially slow.
+        before: Optional[Union[:class:`.abc.Snowflake`, :class:`datetime.datetime`]]
+            Retrieve members before this date or object.
+            If a datetime is provided, it is recommended to use a UTC aware datetime.
+            If the datetime is naive, it is assumed to be local time.
+
+            .. versionadded:: 2.6
+
         after: Optional[Union[:class:`.abc.Snowflake`, :class:`datetime.datetime`]]
             Retrieve members after this date or object.
             If a datetime is provided, it is recommended to use a UTC aware datetime.
@@ -2534,7 +2544,7 @@ class Guild(Hashable):
         if not self._state._intents.members:
             raise ClientException("Intents.members must be enabled to use this.")
 
-        return MemberIterator(self, limit=limit, after=after)
+        return MemberIterator(guild=self, limit=limit, before=before, after=after)
 
     async def fetch_member(self, member_id: int, /) -> Member:
         """|coro|
@@ -2696,7 +2706,7 @@ class Guild(Hashable):
             The ban with the ban data parsed.
         """
 
-        return BanIterator(self, limit=limit, before=before, after=after)
+        return BanIterator(guild=self, limit=limit, before=before, after=after)
 
     async def prune_members(
         self,
@@ -3773,7 +3783,6 @@ class Guild(Hashable):
         payload["uses"] = payload.get("uses", 0)
         return Invite(state=self._state, data=payload, guild=self, channel=channel)
 
-    # TODO: use MISSING when async iterators get refactored
     def audit_logs(
         self,
         *,
@@ -3843,12 +3852,12 @@ class Guild(Hashable):
             user_id = None
 
         return AuditLogIterator(
-            self,
+            guild=self,
             before=before,
             after=after,
-            limit=limit,
             user_id=user_id,
             action_type=action.value if action is not None else None,
+            limit=limit,
         )
 
     async def widget(self) -> Widget:

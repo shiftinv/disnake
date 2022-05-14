@@ -1135,7 +1135,7 @@ class HTTPClient:
         return self.request(route)
 
     def get_public_archived_threads(
-        self, channel_id: Snowflake, before: Optional[Snowflake] = None, limit: int = 50
+        self, channel_id: Snowflake, before: Optional[str] = None, limit: int = 100
     ) -> Response[threads.ThreadPaginationPayload]:
         route = Route(
             "GET", "/channels/{channel_id}/threads/archived/public", channel_id=channel_id
@@ -1148,7 +1148,7 @@ class HTTPClient:
         return self.request(route, params=params)
 
     def get_private_archived_threads(
-        self, channel_id: Snowflake, before: Optional[Snowflake] = None, limit: int = 50
+        self, channel_id: Snowflake, before: Optional[str] = None, limit: int = 100
     ) -> Response[threads.ThreadPaginationPayload]:
         route = Route(
             "GET", "/channels/{channel_id}/threads/archived/private", channel_id=channel_id
@@ -1161,7 +1161,7 @@ class HTTPClient:
         return self.request(route, params=params)
 
     def get_joined_private_archived_threads(
-        self, channel_id: Snowflake, before: Optional[Snowflake] = None, limit: int = 50
+        self, channel_id: Snowflake, before: Optional[Snowflake] = None, limit: int = 100
     ) -> Response[threads.ThreadPaginationPayload]:
         route = Route(
             "GET",
