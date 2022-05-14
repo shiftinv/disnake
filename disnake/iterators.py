@@ -50,8 +50,6 @@ if TYPE_CHECKING:
     from .user import User
     from .webhook import Webhook
 
-# TODO: oldest_first for baniterator + historyiterator
-
 __all__ = (
     "BaseIterator",
     "ChunkIterator",
@@ -225,6 +223,7 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
         after: Optional[SnowflakeTime] = None,
         around: Optional[SnowflakeTime] = None,
         limit: Optional[int] = None,
+        oldest_first: bool = None,
     ):
         if around is not None and limit is not None:
             # API only allows <= 100, but always returns the next larger odd number of messages
@@ -248,7 +247,11 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
         _before, _after = _convert_before_after(before, after)
         _around = _convert_snowflake_datetime(around, high=False)
 
-        self._set_reverse(_after is not None)
+        if oldest_first is None:
+            reverse = _after is not None
+        else:
+            reverse = oldest_first
+        self._set_reverse(reverse)
 
         if _around is not None:
             self._around = _around
@@ -260,13 +263,15 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
             elif _after is not None:
                 self._set_filter(lambda m: _after < int(m["id"]))
 
-        elif _after is not None:
-            self._after = _after
+        elif reverse:
+            self._after = _after or 0  # make sure `_after` is not `None` to use it for pagination
             if _before is not None:
                 self._set_filter(lambda m: int(m["id"]) < _before)
 
-        elif _before is not None:
+        else:
             self._before = _before
+            if _after is not None:
+                self._set_filter(lambda m: _after < int(m["id"]))
 
     async def _get_chunk(self) -> Sequence[MessagePayload]:
         if self._channel is MISSING:

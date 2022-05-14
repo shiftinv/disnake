@@ -1748,7 +1748,7 @@ class Messageable:
         before: Optional[SnowflakeTime] = None,
         after: Optional[SnowflakeTime] = None,
         around: Optional[SnowflakeTime] = None,
-        oldest_first: Optional[bool] = None,  # TODO
+        oldest_first: Optional[bool] = None,
     ) -> HistoryIterator:
         """Returns an :class:`.AsyncIterator` that enables receiving the destination's message history.
 
@@ -1815,7 +1815,7 @@ class Messageable:
             before=before,
             after=after,
             around=around,
-            # oldest_first=oldest_first
+            oldest_first=oldest_first,
         )
 
 
