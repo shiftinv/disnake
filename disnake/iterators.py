@@ -14,9 +14,9 @@ from typing import (
     Callable,
     Dict,
     Generic,
-    Iterable,
     Iterator,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -104,6 +104,7 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
         self._chunk_size: int = chunk_size
 
         self._filter: Optional[Callable[[RawT], bool]] = None
+        self._reverse: bool = False
         self.__it: Iterator[RawT] = iter(())
 
     async def __anext__(self) -> T:
@@ -115,7 +116,10 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
                 raise StopAsyncIteration
 
             # get new chunk, filter if needed
-            result_len, result = await self._get_chunk()
+            result = await self._get_chunk()
+            result_len = len(result)
+            if self._reverse:
+                result = reversed(result)
             self.__it = iter(result)
 
             # update remaining limit
@@ -142,8 +146,14 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
     def _next_limit(self) -> int:
         return min(self._chunk_size, self._limit)
 
+    def _set_filter(self, filter: Optional[Callable[[RawT], bool]]) -> None:
+        self._filter = filter
+
+    def _set_reverse(self, reverse: bool) -> None:
+        self._reverse = reverse
+
     @abstractmethod
-    async def _get_chunk(self) -> Tuple[int, Iterable[RawT]]:
+    async def _get_chunk(self) -> Sequence[RawT]:
         raise NotImplementedError
 
     @abstractmethod
@@ -180,9 +190,9 @@ class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
         _before, self._after = _convert_before_after(before, after)
 
         if _before is not None:
-            self._filter = lambda e: int(e["id"]) < _before
+            self._set_filter(lambda e: int(e["id"]) < _before)
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[UserPayload]]:
+    async def _get_chunk(self) -> Sequence[UserPayload]:
         data = await self._request(
             channel_id=self._channel_id,
             message_id=self._message_id,
@@ -196,7 +206,7 @@ class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
 
         self._after = int(data[-1]["id"])
 
-        return len(data), data
+        return data
 
     def _transform(self, data: UserPayload) -> Union[User, Member]:
         if self._guild is not None:
@@ -238,25 +248,27 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
         _before, _after = _convert_before_after(before, after)
         _around = _convert_snowflake_datetime(around, high=False)
 
+        self._set_reverse(_after is not None)
+
         if _around is not None:
             self._around = _around
             if _before is not None:
                 if _after is not None:
-                    self._filter = lambda m: _after < int(m["id"]) < _before
+                    self._set_filter(lambda m: _after < int(m["id"]) < _before)
                 else:
-                    self._filter = lambda m: int(m["id"]) < _before
+                    self._set_filter(lambda m: int(m["id"]) < _before)
             elif _after is not None:
-                self._filter = lambda m: _after < int(m["id"])
+                self._set_filter(lambda m: _after < int(m["id"]))
 
         elif _after is not None:
             self._after = _after
             if _before is not None:
-                self._filter = lambda m: int(m["id"]) < _before
+                self._set_filter(lambda m: int(m["id"]) < _before)
 
         elif _before is not None:
             self._before = _before
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[MessagePayload]]:
+    async def _get_chunk(self) -> Sequence[MessagePayload]:
         if self._channel is MISSING:
             self._channel = await self._messageable._get_channel()
 
@@ -275,15 +287,12 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
         # API always returns items in descending order
         if self._around is not None:
             self._limit = 0  # we don't do any pagination with `around`
-            result = data
         elif self._after is not None:
             self._after = int(data[0]["id"])
-            result = reversed(data)
         else:
             self._before = int(data[-1]["id"])
-            result = data
 
-        return len(data), result
+        return data
 
     def _transform(self, data: MessagePayload) -> Message:
         return self._messageable._state.create_message(channel=self._channel, data=data)
@@ -310,12 +319,13 @@ class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
 
         if _before is not None:
             self._before = _before
+            self._set_reverse(True)
             if _after is not None:
-                self._filter = lambda b: _after < int(b["user"]["id"])
+                self._set_filter(lambda b: _after < int(b["user"]["id"]))
         elif _after is not None:
             self._after = _after
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[BanPayload]]:
+    async def _get_chunk(self) -> Sequence[BanPayload]:
         data = await self._request(
             guild_id=self._guild.id,
             limit=self._next_limit,
@@ -330,12 +340,10 @@ class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
         # API always returns items in ascending order
         if self._before is not None:
             self._before = int(data[0]["user"]["id"])
-            result = reversed(data)
         else:
             self._after = int(data[-1]["user"]["id"])
-            result = data
 
-        return len(data), result
+        return data
 
     def _transform(self, data: BanPayload) -> BanEntry:
         return BanEntry(
@@ -368,7 +376,7 @@ class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
         self._before, _after = _convert_before_after(before, after)
 
         if _after is not None:
-            self._filter = lambda e: _after < int(e["id"])
+            self._set_filter(lambda e: _after < int(e["id"]))
 
         self._application_commands: Dict[int, APIApplicationCommand] = {}
         self._automod_rules: Dict[int, AutoModRule] = {}
@@ -378,7 +386,7 @@ class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
         self._users: Dict[int, User] = {}
         self._webhooks: Dict[int, Webhook] = {}
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[AuditLogEntryPayload]]:
+    async def _get_chunk(self) -> Sequence[AuditLogEntryPayload]:
         data = await self._request(
             guild_id=self._guild.id,
             limit=self._next_limit,
@@ -424,7 +432,7 @@ class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
 
         self._webhooks = {int(d["id"]): state.create_webhook(d) for d in data.get("webhooks", [])}
 
-        return len(entries), entries
+        return entries
 
     def _transform(self, data: AuditLogEntryPayload) -> AuditLogEntry:
         return AuditLogEntry(
@@ -460,12 +468,13 @@ class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
 
         if _before is not None:
             self._before = _before
+            self._set_reverse(True)
             if _after is not None:
-                self._filter = lambda g: _after < int(g["id"])
+                self._set_filter(lambda g: _after < int(g["id"]))
         elif _after is not None:
             self._after = _after
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[GuildPayload]]:
+    async def _get_chunk(self) -> Sequence[GuildPayload]:
         data = await self._request(
             limit=self._next_limit,
             # only one of these is set
@@ -479,12 +488,10 @@ class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
         # API always returns items in ascending order
         if self._before is not None:
             self._before = int(data[0]["id"])
-            result = reversed(data)
         else:
             self._after = int(data[-1]["id"])
-            result = data
 
-        return len(data), result
+        return data
 
     def _transform(self, data: GuildPayload) -> Guild:
         from .guild import Guild  # cyclic import
@@ -513,9 +520,9 @@ class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
         _before, self._after = _convert_before_after(before, after)
 
         if _before is not None:
-            self._filter = lambda e: int(e["user"]["id"]) < _before
+            self._set_filter(lambda e: int(e["user"]["id"]) < _before)
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[MemberWithUserPayload]]:
+    async def _get_chunk(self) -> Sequence[MemberWithUserPayload]:
         data = await self._request(
             guild_id=self._guild.id,
             limit=self._next_limit,
@@ -527,7 +534,7 @@ class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
 
         self._after = int(data[-1]["user"]["id"])
 
-        return len(data), data
+        return data
 
     def _transform(self, data: MemberWithUserPayload) -> Member:
         from .member import Member  # cyclic import
@@ -582,13 +589,13 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
         # TODO: swap these ifs around?
         if _after is not None:
             if joined:
-                self._filter = lambda t: _after < int(self._get_key(t))
+                self._set_filter(lambda t: _after < int(self._get_key(t)))
             else:
-                self._filter = lambda t: _after < time_snowflake(
-                    parse_time(self._get_key(t)), high=True
+                self._set_filter(
+                    lambda t: _after < time_snowflake(parse_time(self._get_key(t)), high=True)
                 )
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[ThreadPayload]]:
+    async def _get_chunk(self) -> Sequence[ThreadPayload]:
         data = await self._request(
             channel_id=self._channel_id,
             # API requires a minimum of 2, thanks Discord
@@ -606,7 +613,7 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
             # this is the last page
             self._limit = 0
 
-        return len(threads), threads
+        return threads
 
     def _transform(self, data: ThreadPayload) -> Thread:
         from .threads import Thread
@@ -639,12 +646,13 @@ class GuildScheduledEventUserIterator(
 
         if _before is not None:
             self._before = _before
+            self._set_reverse(True)
             if _after is not None:
-                self._filter = lambda b: _after < int(b["user"]["id"])
+                self._set_filter(lambda b: _after < int(b["user"]["id"]))
         elif _after is not None:
             self._after = _after
 
-    async def _get_chunk(self) -> Tuple[int, Iterable[GuildScheduledEventUserPayload]]:
+    async def _get_chunk(self) -> Sequence[GuildScheduledEventUserPayload]:
         data = await self._request(
             guild_id=self._event.guild_id,
             event_id=self._event.id,
@@ -661,12 +669,10 @@ class GuildScheduledEventUserIterator(
         # API always returns items in ascending order
         if self._before is not None:
             self._before = int(data[0]["user"]["id"])
-            result = reversed(data)
         else:
             self._after = int(data[-1]["user"]["id"])
-            result = data
 
-        return len(data), result
+        return data
 
     def _transform(self, data: GuildScheduledEventUserPayload) -> Union[User, Member]:
         from .member import Member  # cyclic import
