@@ -1766,7 +1766,7 @@ class Messageable:
 
         Flattening into a list: ::
 
-            messages = await channel.history(limit=123).flatten()
+            messages = [m async for m in channel.history(limit=123)]
             # messages is now a list of Message...
 
         All parameters are optional.

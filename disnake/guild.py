@@ -2538,7 +2538,7 @@ class Guild(Hashable):
 
         Flattening into a list ::
 
-            members = await guild.fetch_members(limit=150).flatten()
+            members = [m async for m in guild.fetch_members(limit=150)]
             # members is now a list of Member...
         """
         if not self._state._intents.members:
@@ -2676,7 +2676,7 @@ class Guild(Hashable):
 
         Flattening into a list: ::
 
-            bans = await guild.bans(limit=123).flatten()
+            bans = [b async for b in guild.bans(limit=123)]
             # bans is now a list of BanEntry...
 
         All parameters are optional.
@@ -3814,7 +3814,7 @@ class Guild(Hashable):
 
         Getting entries made by a specific user: ::
 
-            entries = await guild.audit_logs(limit=None, user=guild.me).flatten()
+            entries = [e async for e in guild.audit_logs(limit=None, user=guild.me)]
             await channel.send(f'I made {len(entries)} moderation actions.')
 
         Parameters

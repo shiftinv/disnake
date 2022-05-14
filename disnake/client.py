@@ -1762,7 +1762,7 @@ class Client:
 
         Flattening into a list ::
 
-            guilds = await client.fetch_guilds(limit=150).flatten()
+            guilds = [g async for g in client.fetch_guilds(limit=150)]
             # guilds is now a list of Guild...
 
         All parameters are optional.

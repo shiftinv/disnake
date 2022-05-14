@@ -32,7 +32,7 @@ from .threads import Thread
 from .utils import MISSING, parse_time, snowflake_time, time_snowflake
 
 if TYPE_CHECKING:
-    from .abc import Messageable, MessageableChannel, Snowflake, SnowflakeTime  # TODO: allow int
+    from .abc import Messageable, MessageableChannel, Snowflake, SnowflakeTime
     from .app_commands import APIApplicationCommand
     from .client import Client
     from .guild import Guild
@@ -50,7 +50,6 @@ if TYPE_CHECKING:
     from .user import User
     from .webhook import Webhook
 
-# TODO: update examples in docstrings
 # TODO: oldest_first for baniterator + historyiterator
 
 __all__ = (

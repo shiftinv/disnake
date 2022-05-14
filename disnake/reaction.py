@@ -169,7 +169,7 @@ class Reaction:
 
         Flattening into a list: ::
 
-            users = await reaction.users().flatten()
+            users = [u async for u in reaction.users()]
             # users is now a list of User...
             winner = random.choice(users)
             await channel.send(f'{winner} has won the raffle.')

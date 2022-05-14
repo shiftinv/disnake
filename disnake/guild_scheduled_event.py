@@ -698,7 +698,7 @@ class GuildScheduledEvent(Hashable):
 
         Flattening into a list ::
 
-            users = await event.fetch_users(limit=250).flatten()
+            users = [u async for u in event.fetch_users(limit=250)]
         """
         from .iterators import GuildScheduledEventUserIterator  # cyclic import
 
