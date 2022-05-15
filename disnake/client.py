@@ -1737,7 +1737,7 @@ class Client:
     def fetch_guilds(
         self,
         *,
-        limit: Optional[int] = 100,
+        limit: Optional[int] = 200,
         before: Optional[SnowflakeTime] = None,
         after: Optional[SnowflakeTime] = None,
     ) -> GuildIterator:
@@ -1748,7 +1748,7 @@ class Client:
         .. note::
 
             Using this, you will only receive :attr:`.Guild.owner`, :attr:`.Guild.icon`,
-            :attr:`.Guild.id`, and :attr:`.Guild.name` per :class:`.Guild`.
+            :attr:`.Guild.id`, :attr:`.Guild.name`, and :attr:`.Guild.features` per :class:`.Guild`.
 
         .. note::
 
@@ -1767,15 +1767,17 @@ class Client:
             guilds = [g async for g in client.fetch_guilds(limit=150)]
             # guilds is now a list of Guild...
 
-        All parameters are optional.
-
         Parameters
         ----------
         limit: Optional[:class:`int`]
             The number of guilds to retrieve.
             If ``None``, it retrieves every guild you have access to. Note, however,
             that this would make it a slow operation.
-            Defaults to ``100``.
+            Defaults to ``200``.
+
+            .. versionchanged:: 2.6
+                Changed default to ``200``.
+
         before: Union[:class:`.abc.Snowflake`, :class:`datetime.datetime`]
             Retrieves guilds before this date or object.
             If a datetime is provided, it is recommended to use a UTC aware datetime.
