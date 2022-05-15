@@ -5,12 +5,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import (
     TYPE_CHECKING,
+    Any,
     AsyncIterator,
+    Awaitable,
     Callable,
     Dict,
     Generic,
@@ -21,6 +24,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    overload,
 )
 
 from .app_commands import application_command_factory
@@ -30,7 +34,7 @@ from .bans import BanEntry
 from .guild_scheduled_event import GuildScheduledEvent
 from .integrations import PartialIntegration
 from .threads import Thread
-from .utils import MISSING, parse_time, snowflake_time, time_snowflake
+from .utils import MISSING, maybe_coroutine, parse_time, snowflake_time, time_snowflake
 
 if TYPE_CHECKING:
     from .abc import Messageable, MessageableChannel, Snowflake, SnowflakeTime
@@ -67,6 +71,9 @@ __all__ = (
 
 T = TypeVar("T")
 RawT = TypeVar("RawT")
+OT = TypeVar("OT")
+
+_Func = Callable[[T], Union[OT, Awaitable[OT]]]
 
 
 # this could use overloads, but they're not needed
@@ -94,7 +101,142 @@ class BaseIterator(AsyncIterator[T], ABC):
     async def __anext__(self) -> T:
         raise NotImplementedError
 
+    def map(self, func: _Func[T, OT]) -> BaseIterator[OT]:
+        return _MapIterator(self, func)
 
+    def filter(self, func: _Func[T, bool]) -> BaseIterator[T]:
+        return _FilterIterator(self, func)
+
+    def enumerate(self, start: int = 0) -> BaseIterator[Tuple[int, T]]:
+        return _EnumerateIterator(self, start)
+
+    @overload
+    async def find(self, func: _Func[T, bool]) -> Optional[T]:
+        ...
+
+    @overload
+    async def find(self, func: _Func[T, bool], default: OT) -> Union[T, OT]:
+        ...
+
+    async def find(self, func: _Func[T, bool], default: OT = None) -> Optional[Union[T, OT]]:
+        async for value in self:
+            if await maybe_coroutine(func, value):
+                return value
+
+        return default
+
+    async def foreach(self, func: _Func[T, Any]) -> None:
+        if asyncio.iscoroutinefunction(func):
+            async for value in self:
+                await func(value)
+        else:
+            async for value in self:
+                func(value)
+
+    async def count(self) -> int:
+        num = 0
+        async for _ in self:
+            num += 1
+        return num
+
+    def chunk(self, max_size: int) -> BaseIterator[Sequence[T]]:
+        if max_size <= 0:
+            raise ValueError("Chunk size must be > 0")
+        return _ChunkIterator(self, max_size)
+
+    def take_while(self, func: _Func[T, bool]) -> BaseIterator[T]:
+        return _TakeWhileIterator(self, func)
+
+    def drop_while(self, func: _Func[T, bool]) -> BaseIterator[T]:
+        return _DropWhileIterator(self, func)
+
+
+class _MapIterator(BaseIterator[OT]):
+    def __init__(self, it: BaseIterator[T], func: _Func[T, OT]):
+        self._it = it
+        self._func = func
+
+    async def __anext__(self) -> OT:
+        value = await self._it.__anext__()
+        return await maybe_coroutine(self._func, value)
+
+
+class _FilterIterator(BaseIterator[T]):
+    def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
+        self._it = it
+        self._func = func
+
+    async def __anext__(self) -> T:
+        async for value in self._it:
+            if await maybe_coroutine(self._func, value):
+                return value
+        raise StopAsyncIteration
+
+
+class _EnumerateIterator(BaseIterator[Tuple[int, T]]):
+    def __init__(self, it: BaseIterator[T], start: int):
+        self._it = it
+        self._index = start
+
+    async def __anext__(self) -> Tuple[int, T]:
+        v = await self._it.__anext__()
+        i = self._index
+        self._index += 1
+        return i, v
+
+
+class _TakeWhileIterator(BaseIterator[T]):
+    def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
+        self._it = it
+        self._func = func
+
+    async def __anext__(self) -> T:
+        value = await self._it.__anext__()
+        if await maybe_coroutine(self._func, value):
+            return value
+        raise StopAsyncIteration
+
+
+class _DropWhileIterator(BaseIterator[T]):
+    def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
+        self._it = it
+        self._func = func
+        self._pass = (
+            False  # whether check func failed before, in which case we return all subsequent items
+        )
+
+    async def __anext__(self) -> T:
+        if self._pass:
+            return await self._it.__anext__()
+
+        # find first item that doesn't match
+        while True:
+            value = await self._it.__anext__()
+            if not await maybe_coroutine(self._func, value):
+                break
+        self._pass = True
+        return value
+
+
+class _ChunkIterator(BaseIterator[Sequence[T]]):
+    def __init__(self, it: BaseIterator[T], max_size: int):
+        self._it = it
+        self._max_size = max_size
+
+    async def __anext__(self) -> Sequence[T]:
+        chunk: List[T] = []
+
+        async for value in self._it:
+            chunk.append(value)
+            if len(chunk) == self._max_size:
+                break
+
+        if chunk:
+            return chunk
+        raise StopAsyncIteration
+
+
+# TODO: rename this
 class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
     def __init__(
         self,
