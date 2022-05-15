@@ -595,14 +595,18 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
                 self._set_filter(lambda t: _after_ts < parse_time(self._get_key(t)))
 
     async def _get_chunk(self) -> Sequence[ThreadPayload]:
+        limit = self._next_limit
         data = await self._request(
             channel_id=self._channel_id,
             # API requires a minimum of 2, thanks Discord
-            limit=max(self._next_limit, 2),
+            limit=max(limit, 2),
             before=self._before,
         )
 
         threads = data["threads"]
+        if len(threads) > limit:
+            # manually limit if we received more than requested, see above
+            threads = threads[:limit]
         if not threads:
             raise StopAsyncIteration
 
