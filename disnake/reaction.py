@@ -159,6 +159,8 @@ class Reaction:
         The ``before`` and ``after`` parameters must represent a member
         and meet the :class:`~abc.Snowflake` abc, if provided.
 
+        Entries are always returned in ascending order by ID.
+
         Examples
         --------
         Usage ::

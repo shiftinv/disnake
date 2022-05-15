@@ -657,8 +657,7 @@ class GuildScheduledEvent(Hashable):
 
         Returns an :class:`AsyncIterator` of users subscribed to the guild scheduled event.
 
-        If ``before`` is specified, users are returned in reverse order,
-        i.e. starting with the highest ID.
+        Entries are returned in ascending order by ID, or descending if ``before`` is set.
 
         .. versionchanged:: 2.5
             Now returns an :class:`AsyncIterator` instead of a list of the first 100 users.

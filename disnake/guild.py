@@ -2491,13 +2491,13 @@ class Guild(Hashable):
         """Retrieves an :class:`.AsyncIterator` that enables receiving the guild's members. In order to use this,
         :meth:`Intents.members` must be enabled in the developer portal.
 
+        Entries are always returned in ascending order by ID.
+
         .. note::
 
             This method is an API call. For general usage, consider :attr:`members` instead.
 
         .. versionadded:: 1.3
-
-        All parameters are optional.
 
         Parameters
         ----------
@@ -2655,6 +2655,8 @@ class Guild(Hashable):
         """Returns an :class:`~disnake.AsyncIterator` that enables receiving the destination's bans.
 
         You must have the :attr:`~Permissions.ban_members` permission to get this information.
+
+        Entries are returned in ascending order by ID, or descending if ``before`` is set.
 
         .. versionchanged:: 2.5
             Due to a breaking change in Discord's API, this now returns an :class:`~disnake.AsyncIterator` instead of a :class:`list`.

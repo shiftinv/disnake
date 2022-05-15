@@ -1743,6 +1743,8 @@ class Client:
     ) -> GuildIterator:
         """Retrieves an :class:`.AsyncIterator` that enables receiving your guilds.
 
+        Entries are returned in ascending order by ID, or descending if ``before`` is set.
+
         .. note::
 
             Using this, you will only receive :attr:`.Guild.owner`, :attr:`.Guild.icon`,

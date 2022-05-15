@@ -937,6 +937,9 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         You must have :attr:`~Permissions.read_message_history` permission to use this. If iterating over private threads
         then :attr:`~Permissions.manage_threads` permission is also required.
 
+        Entries are returned in descending order by archive date if ``joined`` is ``False``,
+        or in descending order by ID otherwise.
+
         .. versionadded:: 2.0
 
         Parameters

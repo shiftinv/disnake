@@ -1754,6 +1754,8 @@ class Messageable:
 
         You must have :attr:`.Permissions.read_message_history` permission to use this.
 
+        See ``oldest_first`` for the order of returned messages.
+
         Examples
         --------
 
@@ -1768,8 +1770,6 @@ class Messageable:
 
             messages = [m async for m in channel.history(limit=123)]
             # messages is now a list of Message...
-
-        All parameters are optional.
 
         Parameters
         ----------
