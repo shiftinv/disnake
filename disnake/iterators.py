@@ -15,6 +15,7 @@ from typing import (
     Dict,
     Generic,
     Iterator,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -605,25 +606,13 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
 
         threads = data["threads"]
         if len(threads) > limit:
-            # manually limit if we received more than requested, see above
+            # manually limit if we received more than needed, see above
             threads = threads[:limit]
         if not threads:
             raise StopAsyncIteration
 
         # insert thread member objects into threads
-        self_id = self._guild._state.user.id
-        members: Dict[int, ThreadMemberPayload] = {}
-        for m in data["members"]:
-            if not (thread_id := m.get("id")) or not (user_id := m.get("user_id")):
-                continue
-            # we only expect thread member objects of the client user, but check to make sure
-            if int(user_id) != self_id:
-                continue
-            members[int(thread_id)] = m
-
-        for thread in threads:
-            if member := members.get(int(thread["id"])):
-                thread["member"] = member
+        self._add_members(threads, data["members"])
 
         # update pagination params
         self._before = self._get_key(threads[-1])
@@ -638,6 +627,23 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
         from .threads import Thread
 
         return Thread(guild=self._guild, state=self._guild._state, data=data)
+
+    def _add_members(
+        self, threads: List[ThreadPayload], members: List[ThreadMemberPayload]
+    ) -> None:
+        self_id = self._guild._state.user.id
+        member_dict: Dict[int, ThreadMemberPayload] = {}
+        for m in members:
+            if not (thread_id := m.get("id")) or not (user_id := m.get("user_id")):
+                continue
+            # we only expect thread member objects of the client user, but check to make sure
+            if int(user_id) != self_id:
+                continue
+            member_dict[int(thread_id)] = m
+
+        for thread in threads:
+            if member := member_dict.get(int(thread["id"])):
+                thread["member"] = member
 
 
 class GuildScheduledEventUserIterator(
