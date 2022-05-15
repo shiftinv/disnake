@@ -567,11 +567,20 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
         if joined and not private:
             raise ValueError("Cannot iterate over joined public archived threads")
 
+        self._before: Optional[str] = None  # snowflake string or iso timestamp
+        _after: Optional[int]  # snowflake int
+        _before, _after = _convert_before_after(before, after)
+
         self._get_key: Callable[[ThreadPayload], str]
         http = guild._state.http
         if joined:
             self._request = http.get_joined_private_archived_threads
             self._get_key = lambda t: str(t["id"])
+
+            if _before is not None:
+                self._before = str(_before)
+            if _after is not None:
+                self._set_filter(lambda t: _after < int(self._get_key(t)))
         else:
             if private:
                 self._request = http.get_private_archived_threads
@@ -579,23 +588,9 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
                 self._request = http.get_public_archived_threads
             self._get_key = lambda t: t["thread_metadata"]["archive_timestamp"]
 
-        self._before: Optional[str]  # snowflake string or iso timestamp
-        _after: Optional[int]  # snowflake int
-        _before, _after = _convert_before_after(before, after)
-
-        if _before is None:
-            self._before = None
-        else:
-            if joined:
-                self._before = str(_before)
-            else:
+            if _before is not None:
                 self._before = snowflake_time(_before).isoformat()
-
-        # TODO: swap these ifs around?
-        if _after is not None:
-            if joined:
-                self._set_filter(lambda t: _after < int(self._get_key(t)))
-            else:
+            if _after is not None:
                 self._set_filter(
                     lambda t: _after < time_snowflake(parse_time(self._get_key(t)), high=True)
                 )
