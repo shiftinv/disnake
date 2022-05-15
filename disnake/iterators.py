@@ -591,9 +591,8 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
             if _before is not None:
                 self._before = snowflake_time(_before).isoformat()
             if _after is not None:
-                self._set_filter(
-                    lambda t: _after < time_snowflake(parse_time(self._get_key(t)), high=True)
-                )
+                _after_ts = snowflake_time(_after)  # small optimization
+                self._set_filter(lambda t: _after_ts < parse_time(self._get_key(t)))
 
     async def _get_chunk(self) -> Sequence[ThreadPayload]:
         data = await self._request(
