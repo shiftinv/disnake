@@ -2489,7 +2489,7 @@ class Guild(Hashable):
         after: Optional[SnowflakeTime] = None,
     ) -> MemberIterator:
         """Retrieves an :class:`.AsyncIterator` that enables receiving the guild's members. In order to use this,
-        :meth:`Intents.members` must be enabled.
+        :meth:`Intents.members` must be enabled in the developer portal.
 
         .. note::
 
@@ -2518,8 +2518,6 @@ class Guild(Hashable):
 
         Raises
         ------
-        ClientException
-            The members intent is not enabled.
         HTTPException
             Retrieving the members failed.
 
@@ -2541,9 +2539,6 @@ class Guild(Hashable):
             members = [m async for m in guild.fetch_members(limit=150)]
             # members is now a list of Member...
         """
-        if not self._state._intents.members:
-            raise ClientException("Intents.members must be enabled to use this.")
-
         return MemberIterator(guild=self, limit=limit, before=before, after=after)
 
     async def fetch_member(self, member_id: int, /) -> Member:
