@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     )
     from .types.member import MemberWithUser as MemberWithUserPayload
     from .types.message import Message as MessagePayload
-    from .types.threads import Thread as ThreadPayload
+    from .types.threads import Thread as ThreadPayload, ThreadMember as ThreadMemberPayload
     from .types.user import User as UserPayload
     from .user import User
     from .webhook import Webhook
@@ -607,6 +607,22 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
         if not threads:
             raise StopAsyncIteration
 
+        # insert thread member objects into threads
+        self_id = self._guild._state.user.id
+        members: Dict[int, ThreadMemberPayload] = {}
+        for m in data["members"]:
+            if not (thread_id := m.get("id")) or not (user_id := m.get("user_id")):
+                continue
+            # we only expect thread member objects of the client user, but check to make sure
+            if int(user_id) != self_id:
+                continue
+            members[int(thread_id)] = m
+
+        for thread in threads:
+            if member := members.get(int(thread["id"])):
+                thread["member"] = member
+
+        # update pagination params
         self._before = self._get_key(threads[-1])
 
         if not data.get("has_more", False):
