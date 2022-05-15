@@ -96,11 +96,23 @@ class BaseIterator(AsyncIterator[T], ABC):
 
 
 class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
-    def __init__(self, *, limit: Optional[int], chunk_size: int):
+    def __init__(
+        self,
+        *,
+        limit: Optional[int],
+        chunk_size: int,
+        min_expected_chunk_size: int = MISSING,
+    ):
         self._limit: int = limit if limit is not None else sys.maxsize
         if self._limit <= 0:
             raise ValueError("Limit must be > 0")
-        self._chunk_size: int = chunk_size
+
+        # these are generally the same, but the expected size can be changed if an
+        # endpoint uses a slightly different pagination mechanism (e.g. `has_more`)
+        self._max_chunk_size: int = chunk_size
+        self._min_expected_chunk_size: int = (
+            self._max_chunk_size if min_expected_chunk_size is MISSING else min_expected_chunk_size
+        )
 
         self._filter: Optional[Callable[[RawT], bool]] = None
         self._reverse: bool = False
@@ -124,10 +136,10 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
             # update remaining limit
             self._limit -= result_len
 
-            # if we received fewer items than max chunk size,
-            # we either reached the last chunk or the limit was lower than the chunk size,
+            # if we received fewer items than expected,
+            # we either reached the last chunk or the requested limit was lower than the chunk size,
             # in which case we won't send any further requests
-            if result_len < self._chunk_size:
+            if result_len < self._min_expected_chunk_size:
                 self._limit = 0
 
             # get value from new chunk
@@ -143,7 +155,7 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
 
     @property
     def _next_limit(self) -> int:
-        return min(self._chunk_size, self._limit)
+        return min(self._max_chunk_size, self._limit)
 
     def _set_filter(self, filter: Optional[Callable[[RawT], bool]]) -> None:
         self._filter = filter
@@ -560,7 +572,15 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
         after: Optional[SnowflakeTime] = None,
         limit: Optional[int] = None,
     ):
-        super().__init__(limit=limit, chunk_size=100)
+        super().__init__(
+            limit=limit,
+            chunk_size=100,
+            # pagination mainly works using `has_more`, but since we can theoretically
+            # receive a chunk smaller than the max size but with `has_more=True`,
+            # we don't want to stop at that point, so we only expect at least 1 item per chunk
+            # to continue fetching pages instead of 100
+            min_expected_chunk_size=1,
+        )
 
         self._channel_id: int = channel_id
         self._guild: Guild = guild
