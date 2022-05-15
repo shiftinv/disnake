@@ -928,7 +928,7 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         *,
         private: bool = False,
         joined: bool = False,
-        limit: Optional[int] = 50,
+        limit: Optional[int] = 100,
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ) -> ArchivedThreadIterator:
@@ -945,6 +945,10 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
             The number of threads to retrieve.
             If ``None``, retrieves every archived thread in the channel. Note, however,
             that this would make it a slow operation.
+
+            .. versionchanged:: 2.6
+                Changed default to ``100``.
+
         before: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
             Retrieve archived channels before the given date or ID.
         after: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
@@ -3169,7 +3173,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
     def archived_threads(
         self,
         *,
-        limit: Optional[int] = 50,
+        limit: Optional[int] = 100,
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ) -> ArchivedThreadIterator:
@@ -3183,6 +3187,10 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
             The number of threads to retrieve.
             If ``None``, retrieves every archived thread in the channel. Note, however,
             that this would make it a slow operation.
+
+            .. versionchanged:: 2.6
+                Changed default to ``100``.
+
         before: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
             Retrieve archived channels before the given date or ID.
         after: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
