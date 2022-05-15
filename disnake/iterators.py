@@ -201,9 +201,8 @@ class _DropWhileIterator(BaseIterator[T]):
     def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
         self._it = it
         self._func = func
-        self._pass = (
-            False  # whether check func failed before, in which case we return all subsequent items
-        )
+        # whether check func failed before, in which case we return all subsequent items
+        self._pass = False
 
     async def __anext__(self) -> T:
         if self._pass:

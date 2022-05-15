@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 __all__ = (
     "DiscordException",
     "ClientException",
-    "NoMoreItems",
     "GatewayNotFound",
     "HTTPException",
     "Forbidden",
@@ -52,12 +51,6 @@ class ClientException(DiscordException):
 
     These are usually for exceptions that happened due to user input.
     """
-
-    pass
-
-
-class NoMoreItems(DiscordException):
-    """Exception that is raised when an async iteration operation has no more items."""
 
     pass
 

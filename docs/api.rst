@@ -6047,8 +6047,6 @@ The following exceptions are thrown by the library.
 
 .. autoexception:: LoginFailure
 
-.. autoexception:: NoMoreItems
-
 .. autoexception:: HTTPException
     :members:
 
@@ -6104,7 +6102,6 @@ Exception Hierarchy
                     - :exc:`InteractionNotResponded`
                     - :exc:`InteractionTimedOut`
                     - :exc:`ModalChainNotSupported`
-            - :exc:`NoMoreItems`
             - :exc:`GatewayNotFound`
             - :exc:`HTTPException`
                 - :exc:`Forbidden`
