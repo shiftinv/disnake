@@ -94,6 +94,8 @@ def _convert_before_after(
 
 
 class BaseIterator(AsyncIterator[T], ABC):
+    __slots__ = ()
+
     def __aiter__(self) -> AsyncIterator[T]:
         return self
 
@@ -152,6 +154,8 @@ class BaseIterator(AsyncIterator[T], ABC):
 
 
 class _MapIterator(BaseIterator[OT]):
+    __slots__ = ("_it", "_func")
+
     def __init__(self, it: BaseIterator[T], func: _Func[T, OT]):
         self._it = it
         self._func = func
@@ -162,6 +166,8 @@ class _MapIterator(BaseIterator[OT]):
 
 
 class _FilterIterator(BaseIterator[T]):
+    __slots__ = ("_it", "_func")
+
     def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
         self._it = it
         self._func = func
@@ -174,6 +180,8 @@ class _FilterIterator(BaseIterator[T]):
 
 
 class _EnumerateIterator(BaseIterator[Tuple[int, T]]):
+    __slots__ = ("_it", "_index")
+
     def __init__(self, it: BaseIterator[T], start: int):
         self._it = it
         self._index = start
@@ -186,6 +194,8 @@ class _EnumerateIterator(BaseIterator[Tuple[int, T]]):
 
 
 class _TakeWhileIterator(BaseIterator[T]):
+    __slots__ = ("_it", "_func")
+
     def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
         self._it = it
         self._func = func
@@ -198,6 +208,8 @@ class _TakeWhileIterator(BaseIterator[T]):
 
 
 class _DropWhileIterator(BaseIterator[T]):
+    __slots__ = ("_it", "_func", "_pass")
+
     def __init__(self, it: BaseIterator[T], func: _Func[T, bool]):
         self._it = it
         self._func = func
@@ -218,6 +230,8 @@ class _DropWhileIterator(BaseIterator[T]):
 
 
 class _ChunkIterator(BaseIterator[Sequence[T]]):
+    __slots__ = ("_it", "_max_size")
+
     def __init__(self, it: BaseIterator[T], max_size: int):
         self._it = it
         self._max_size = max_size
@@ -237,6 +251,15 @@ class _ChunkIterator(BaseIterator[Sequence[T]]):
 
 # TODO: rename this
 class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
+    __slots__ = (
+        "_limit",
+        "_max_chunk_size",
+        "_min_expected_chunk_size",
+        "_filter",
+        "_reverse",
+        "__it",
+    )
+
     def __init__(
         self,
         *,
@@ -314,6 +337,16 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
 
 
 class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
+    __slots__ = (
+        "_request",
+        "_state",
+        "_message_id",
+        "_channel_id",
+        "_emoji",
+        "_guild",
+        "_after",
+    )
+
     def __init__(
         self,
         *,
@@ -369,6 +402,8 @@ class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
 
 
 class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
+    __slots__ = ("_request", "_messageable", "_channel", "_before", "_after", "_around")
+
     def __init__(
         self,
         *,
@@ -458,6 +493,8 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
 
 
 class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
+    __slots__ = ("_request", "_guild", "_before", "_after")
+
     def __init__(
         self,
         *,
@@ -512,6 +549,20 @@ class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
 
 
 class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
+    __slots__ = (
+        "_request",
+        "_guild",
+        "_user_id",
+        "_action_type",
+        "_before",
+        "_application_commands",
+        "_guild_scheduled_events",
+        "_integrations",
+        "_threads",
+        "_users",
+        "_webhooks",
+    )
+
     def __init__(
         self,
         *,
@@ -608,6 +659,8 @@ class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
 
 
 class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
+    __slots__ = ("_request", "_state", "_before", "_after")
+
     def __init__(
         self,
         *,
@@ -659,6 +712,8 @@ class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
 
 
 class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
+    __slots__ = ("_request", "_state", "_guild", "_after")
+
     def __init__(
         self,
         *,
@@ -702,6 +757,8 @@ class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
 
 
 class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
+    __slots__ = ("_request", "_guild", "_channel_id", "_get_key", "_before")
+
     def __init__(
         self,
         *,
@@ -810,6 +867,8 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
 class GuildScheduledEventUserIterator(
     ChunkIterator["GuildScheduledEventUserPayload", Union["User", "Member"]]
 ):
+    __slots__ = ("_request", "_event", "_with_members", "_before", "_after")
+
     def __init__(
         self,
         *,
