@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "BaseIterator",
-    "ChunkIterator",
+    "PageIterator",
     "ReactionIterator",
     "HistoryIterator",
     "BanIterator",
@@ -249,8 +249,7 @@ class _ChunkIterator(BaseIterator[Sequence[T]]):
         raise StopAsyncIteration
 
 
-# TODO: rename this
-class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
+class PageIterator(BaseIterator[T], Generic[RawT, T], ABC):
     __slots__ = (
         "_limit",
         "_max_chunk_size",
@@ -336,7 +335,7 @@ class ChunkIterator(BaseIterator[T], Generic[RawT, T], ABC):
         raise NotImplementedError
 
 
-class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
+class ReactionIterator(PageIterator["UserPayload", Union["User", "Member"]]):
     __slots__ = (
         "_request",
         "_state",
@@ -401,7 +400,7 @@ class ReactionIterator(ChunkIterator["UserPayload", Union["User", "Member"]]):
         return self._state.create_user(data)
 
 
-class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
+class HistoryIterator(PageIterator["MessagePayload", "Message"]):
     __slots__ = ("_request", "_messageable", "_channel", "_before", "_after", "_around")
 
     def __init__(
@@ -492,7 +491,7 @@ class HistoryIterator(ChunkIterator["MessagePayload", "Message"]):
         return self._messageable._state.create_message(channel=self._channel, data=data)
 
 
-class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
+class BanIterator(PageIterator["BanPayload", "BanEntry"]):
     __slots__ = ("_request", "_guild", "_before", "_after")
 
     def __init__(
@@ -548,7 +547,7 @@ class BanIterator(ChunkIterator["BanPayload", "BanEntry"]):
         )
 
 
-class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
+class AuditLogIterator(PageIterator["AuditLogEntryPayload", "AuditLogEntry"]):
     __slots__ = (
         "_request",
         "_guild",
@@ -658,7 +657,7 @@ class AuditLogIterator(ChunkIterator["AuditLogEntryPayload", "AuditLogEntry"]):
         )
 
 
-class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
+class GuildIterator(PageIterator["GuildPayload", "Guild"]):
     __slots__ = ("_request", "_state", "_before", "_after")
 
     def __init__(
@@ -711,7 +710,7 @@ class GuildIterator(ChunkIterator["GuildPayload", "Guild"]):
         return Guild(state=self._state, data=data)
 
 
-class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
+class MemberIterator(PageIterator["MemberWithUserPayload", "Member"]):
     __slots__ = ("_request", "_state", "_guild", "_after")
 
     def __init__(
@@ -756,7 +755,7 @@ class MemberIterator(ChunkIterator["MemberWithUserPayload", "Member"]):
         return Member(guild=self._guild, state=self._state, data=data)
 
 
-class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
+class ArchivedThreadIterator(PageIterator["ThreadPayload", "Thread"]):
     __slots__ = ("_request", "_guild", "_channel_id", "_get_key", "_before")
 
     def __init__(
@@ -865,7 +864,7 @@ class ArchivedThreadIterator(ChunkIterator["ThreadPayload", "Thread"]):
 
 
 class GuildScheduledEventUserIterator(
-    ChunkIterator["GuildScheduledEventUserPayload", Union["User", "Member"]]
+    PageIterator["GuildScheduledEventUserPayload", Union["User", "Member"]]
 ):
     __slots__ = ("_request", "_event", "_with_members", "_before", "_after")
 
