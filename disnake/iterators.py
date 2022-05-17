@@ -289,7 +289,7 @@ class PageIterator(BaseIterator[T], Generic[RawT, T], ABC):
             if self._next_limit <= 0:
                 raise StopAsyncIteration
 
-            # get new chunk, filter if needed
+            # get new chunk, reverse if needed
             result = await self._get_chunk()
             result_len = len(result)
             if self._reverse:
