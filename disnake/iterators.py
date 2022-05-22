@@ -37,7 +37,7 @@ from .integrations import PartialIntegration
 from .threads import Thread
 from .utils import (
     MISSING,
-    get as _utils_get,
+    _get_async as _utils_get_async,
     maybe_coroutine,
     parse_time,
     snowflake_time,
@@ -132,7 +132,7 @@ class BaseIterator(AsyncIterator[T], ABC):
         return _EnumerateIterator(self, start)
 
     async def get(self, **attrs: Any) -> Optional[T]:
-        return await _utils_get(self, **attrs)
+        return await _utils_get_async(self, **attrs)
 
     @overload
     async def find(self, func: _Func[T, bool]) -> Optional[T]:
