@@ -35,7 +35,14 @@ from .bans import BanEntry
 from .guild_scheduled_event import GuildScheduledEvent
 from .integrations import PartialIntegration
 from .threads import Thread
-from .utils import MISSING, maybe_coroutine, parse_time, snowflake_time, time_snowflake
+from .utils import (
+    MISSING,
+    get as _utils_get,
+    maybe_coroutine,
+    parse_time,
+    snowflake_time,
+    time_snowflake,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import TypeGuard
@@ -123,6 +130,9 @@ class BaseIterator(AsyncIterator[T], ABC):
 
     def enumerate(self, start: int = 0) -> BaseIterator[Tuple[int, T]]:
         return _EnumerateIterator(self, start)
+
+    async def get(self, **attrs: Any) -> Optional[T]:
+        return await _utils_get(self, **attrs)
 
     @overload
     async def find(self, func: _Func[T, bool]) -> Optional[T]:
