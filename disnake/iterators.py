@@ -19,6 +19,7 @@ from typing import (
     Generic,
     Iterator,
     List,
+    NoReturn,
     Optional,
     Sequence,
     Tuple,
@@ -151,6 +152,17 @@ class BaseIterator(AsyncIterator[T], ABC):
 
     def drop_while(self, func: _Func[T, bool]) -> BaseIterator[T]:
         return _DropWhileIterator(self, func)
+
+    if not TYPE_CHECKING:
+
+        def __iter__(self) -> NoReturn:
+            raise TypeError("This is an async iterator - use `async for` instead of `for`.")
+
+        def __next__(self) -> NoReturn:
+            instead = (
+                "await anext(it)" if sys.version_info[:2] >= (3, 10) else "await it.__anext__()"
+            )
+            raise TypeError(f"This is an async iterator - use `{instead}` instead of `next(it)`.")
 
 
 class _MapIterator(BaseIterator[OT]):
