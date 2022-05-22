@@ -20,9 +20,11 @@ from operator import attrgetter
 from typing import (
     TYPE_CHECKING,
     Any,
+    AsyncIterable,
     AsyncIterator,
     Awaitable,
     Callable,
+    Coroutine,
     Dict,
     ForwardRef,
     Generic,
@@ -395,7 +397,22 @@ def time_snowflake(dt: datetime.datetime, high: bool = False) -> int:
     return (discord_millis << 22) + (2**22 - 1 if high else 0)
 
 
+AnyIterable = Union[Iterable[T], AsyncIterable[T]]
+Coro = Coroutine[Any, Any, T]
+MaybeCoro = Union[T, Coro[T]]
+
+
+@overload
 def find(predicate: Callable[[T], Any], seq: Iterable[T]) -> Optional[T]:
+    ...
+
+
+@overload
+def find(predicate: Callable[[T], Any], seq: AsyncIterable[T]) -> Coro[Optional[T]]:
+    ...
+
+
+def find(predicate: Callable[[T], Any], seq: AnyIterable[T]) -> MaybeCoro[Optional[T]]:
     """A helper to return the first element found in the sequence
     that meets the predicate. For example: ::
 
@@ -407,21 +424,47 @@ def find(predicate: Callable[[T], Any], seq: Iterable[T]) -> Optional[T]:
     This is different from :func:`py:filter` due to the fact it stops the moment it finds
     a valid entry.
 
+    .. versionchanged:: 2.6
+        Now supports :class:`collections.abc.AsyncIterable`.
+
     Parameters
     ----------
     predicate
         A function that returns a boolean-like result.
-    seq: :class:`collections.abc.Iterable`
-        The iterable to search through.
+    seq: Union[:class:`~collections.abc.Iterable`, :class:`~collections.abc.AsyncIterable`]
+        The (async) iterable to search through.
+        If this is an :class:`~collections.abc.AsyncIterable`, a :ref:`coroutine <coroutine>` is returned.
     """
+    if hasattr(seq, "__aiter__"):
+        return _find_async(predicate, seq)  # type: ignore
+    return _find_sync(predicate, seq)  # type: ignore
 
+
+def _find_sync(predicate: Callable[[T], Any], seq: Iterable[T]) -> Optional[T]:
     for element in seq:
         if predicate(element):
             return element
     return None
 
 
+async def _find_async(predicate: Callable[[T], Any], seq: AsyncIterable[T]) -> Optional[T]:
+    async for element in seq:
+        if predicate(element):
+            return element
+    return None
+
+
+@overload
 def get(iterable: Iterable[T], **attrs: Any) -> Optional[T]:
+    ...
+
+
+@overload
+def get(iterable: AsyncIterable[T], **attrs: Any) -> Coro[Optional[T]]:
+    ...
+
+
+def get(iterable: AnyIterable[T], **attrs: Any) -> MaybeCoro[Optional[T]]:
     """
     A helper that returns the first element in the iterable that meets
     all the traits passed in ``attrs``. This is an alternative for
@@ -436,6 +479,9 @@ def get(iterable: Iterable[T], **attrs: Any) -> Optional[T]:
 
     If nothing is found that matches the attributes passed, then
     ``None`` is returned.
+
+    .. versionchanged:: 2.6
+        Now supports :class:`collections.abc.AsyncIterable`.
 
     Examples
     --------
@@ -460,28 +506,54 @@ def get(iterable: Iterable[T], **attrs: Any) -> Optional[T]:
 
     Parameters
     ----------
-    iterable
+    iterable: Union[:class:`~collections.abc.Iterable`, :class:`~collections.abc.AsyncIterable`]
         An iterable to search through.
+        If this is an :class:`~collections.abc.AsyncIterable`, a :ref:`coroutine <coroutine>` is returned.
     **attrs
         Keyword arguments that denote attributes to search with.
     """
+    if hasattr(iterable, "__aiter__"):
+        return _get_async(iterable, **attrs)  # type: ignore
+    return _get_sync(iterable, **attrs)  # type: ignore
 
+
+def _get_sync(iterable: Iterable[T], **attrs: Any) -> Optional[T]:
     # global -> local
     _all = all
     attrget = attrgetter
 
+    converted = [(attrget(attr.replace("__", ".")), value) for attr, value in attrs.items()]
+
     # Special case the single element call
-    if len(attrs) == 1:
-        k, v = attrs.popitem()
-        pred = attrget(k.replace("__", "."))
+    if len(converted) == 1:
+        pred, v = converted[0]
         for elem in iterable:
             if pred(elem) == v:
                 return elem
         return None
 
+    for elem in iterable:
+        if _all(pred(elem) == value for pred, value in converted):
+            return elem
+    return None
+
+
+async def _get_async(iterable: AsyncIterable[T], **attrs: Any) -> Optional[T]:
+    # global -> local
+    _all = all
+    attrget = attrgetter
+
     converted = [(attrget(attr.replace("__", ".")), value) for attr, value in attrs.items()]
 
-    for elem in iterable:
+    # Special case the single element call
+    if len(converted) == 1:
+        pred, v = converted[0]
+        async for elem in iterable:
+            if pred(elem) == v:
+                return elem
+        return None
+
+    async for elem in iterable:
         if _all(pred(elem) == value for pred, value in converted):
             return elem
     return None
