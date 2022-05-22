@@ -13,8 +13,8 @@ from typing import (
     TYPE_CHECKING,
     Any,
     AsyncIterator,
-    Awaitable,
     Callable,
+    Coroutine,
     Dict,
     Generic,
     Iterator,
@@ -38,6 +38,8 @@ from .threads import Thread
 from .utils import MISSING, maybe_coroutine, parse_time, snowflake_time, time_snowflake
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeGuard
+
     from .abc import Messageable, MessageableChannel, Snowflake, SnowflakeTime
     from .app_commands import APIApplicationCommand
     from .client import Client
@@ -74,7 +76,7 @@ T = TypeVar("T")
 RawT = TypeVar("RawT")
 OT = TypeVar("OT")
 
-_Func = Callable[[T], Union[OT, Awaitable[OT]]]
+_Func = Callable[[T], Union[OT, Coroutine[Any, Any, OT]]]
 
 
 # this could use overloads, but they're not needed
@@ -92,6 +94,15 @@ def _convert_before_after(
     _before = _convert_snowflake_datetime(before, high=False)
     _after = _convert_snowflake_datetime(after, high=True)
     return _before, _after
+
+
+if TYPE_CHECKING:
+
+    def _is_coro_func(func: _Func[T, OT]) -> TypeGuard[Callable[[T], Coroutine[Any, Any, OT]]]:
+        ...
+
+else:
+    _is_coro_func = asyncio.iscoroutinefunction
 
 
 class BaseIterator(AsyncIterator[T], ABC):
@@ -122,14 +133,19 @@ class BaseIterator(AsyncIterator[T], ABC):
         ...
 
     async def find(self, func: _Func[T, bool], default: OT = None) -> Optional[Union[T, OT]]:
-        async for value in self:
-            if await maybe_coroutine(func, value):
-                return value
+        if _is_coro_func(func):
+            async for value in self:
+                if await func(value):
+                    return value
+        else:
+            async for value in self:
+                if func(value):
+                    return value
 
         return default
 
     async def foreach(self, func: _Func[T, Any]) -> None:
-        if asyncio.iscoroutinefunction(func):
+        if _is_coro_func(func):
             async for value in self:
                 await func(value)
         else:
