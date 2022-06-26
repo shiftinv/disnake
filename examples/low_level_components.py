@@ -1,3 +1,5 @@
+# pyright: reportMissingTypeArgument=false
+
 """
 An example on how to send and process components without using views.
 """

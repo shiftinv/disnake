@@ -29,7 +29,7 @@ ffmpeg_options = {"options": "-vn"}
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
-class YTDLSource(disnake.PCMVolumeTransformer):
+class YTDLSource(disnake.PCMVolumeTransformer[disnake.FFmpegPCMAudio]):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
 

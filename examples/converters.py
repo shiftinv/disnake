@@ -1,10 +1,11 @@
-# This example requires the 'members' privileged intent to use the Member converter.
+# pyright: reportMissingTypeArgument=false
 
 import typing
 
 import disnake
 from disnake.ext import commands
 
+# This example requires the 'members' privileged intent to use the Member converter.
 intents = disnake.Intents.default()
 intents.members = True
 intents.message_content = True

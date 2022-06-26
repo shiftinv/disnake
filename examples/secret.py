@@ -1,3 +1,5 @@
+# pyright: reportMissingTypeArgument=false
+
 import typing
 
 import disnake

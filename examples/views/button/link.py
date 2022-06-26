@@ -1,3 +1,5 @@
+# pyright: reportMissingTypeArgument=false
+
 from urllib.parse import quote_plus
 
 import disnake

@@ -1,3 +1,5 @@
+# pyright: reportMissingTypeArgument=false
+
 import disnake
 from disnake.ext import commands
 
