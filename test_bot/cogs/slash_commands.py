@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 
 
-async def test_autocomp(inter, string):
+async def mood_autocomp(inter: disnake.CommandInteraction, string: str):
     return ["XD", ":D", ":)", ":|", ":("]
 
 
@@ -26,14 +26,14 @@ class SlashCommands(commands.Cog):
         await inter.send(mood)
 
     @auto.autocomplete("mood")
-    async def test_autocomp(self, inter: disnake.CommandInteraction, string: str):
+    async def _mood_autocomp(self, inter: disnake.CommandInteraction, string: str):
         return ["XD", ":D", ":)", ":|", ":("]
 
     @commands.slash_command()
     async def alt_auto(
         self,
         inter: disnake.AppCmdInter,
-        mood: str = commands.Param(autocomplete=test_autocomp),
+        mood: str = commands.Param(autocomplete=mood_autocomp),
     ):
         await inter.send(mood)
 

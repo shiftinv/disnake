@@ -37,7 +37,7 @@ import unicodedata
 import warnings
 from base64 import b64encode, urlsafe_b64decode as b64decode
 from bisect import bisect_left
-from inspect import getdoc as _getdoc, isawaitable as _isawaitable, signature as _signature
+from inspect import getdoc as _getdoc, signature as _signature
 from operator import attrgetter
 from typing import (
     TYPE_CHECKING,
@@ -130,7 +130,7 @@ class _cached_property:
 if TYPE_CHECKING:
     from functools import cached_property as cached_property
 
-    from typing_extensions import ParamSpec, Self
+    from typing_extensions import ParamSpec, Self, TypeGuard
 
     from .abc import Snowflake
     from .asset import AssetBytes
@@ -262,7 +262,7 @@ def isoformat_utc(dt: Optional[datetime.datetime]) -> Optional[str]:
     return None
 
 
-def copy_doc(original: Callable) -> Callable[[T], T]:
+def copy_doc(original: Callable[..., Any]) -> Callable[[T], T]:
     def decorator(overriden: T) -> T:
         overriden.__doc__ = original.__doc__
         overriden.__signature__ = _signature(original)  # type: ignore
@@ -596,13 +596,27 @@ async def maybe_coroutine(
     f: Callable[P, Union[Awaitable[T], T]], /, *args: P.args, **kwargs: P.kwargs
 ) -> T:
     value = f(*args, **kwargs)
-    if _isawaitable(value):
+    if is_awaitable(value):
         return await value
     else:
         return value  # type: ignore  # typeguard doesn't narrow in the negative case
 
 
-async def async_all(gen: Iterable[Union[Awaitable[bool], bool]], *, check=_isawaitable) -> bool:
+# improved `isawaitable` typing for `Union[T, Awaitable[T]]`
+if TYPE_CHECKING:
+
+    def is_awaitable(val: Union[T, Awaitable[T]]) -> TypeGuard[Awaitable[T]]:
+        ...
+
+else:
+    from inspect import isawaitable as is_awaitable
+
+
+async def async_all(
+    gen: Iterable[Union[Awaitable[bool], bool]],
+    *,
+    check: Callable[[Union[bool, Awaitable[bool]]], TypeGuard[Awaitable[bool]]] = is_awaitable,
+) -> bool:
     for elem in gen:
         if check(elem):
             elem = await elem
@@ -679,7 +693,13 @@ def valid_icon_size(size: int) -> bool:
     return not size & (size - 1) and 4096 >= size >= 16
 
 
-class SnowflakeList(array.array):
+if TYPE_CHECKING:
+    _SnowflakeListBase = array.array[int]
+else:
+    _SnowflakeListBase = array.array
+
+
+class SnowflakeList(_SnowflakeListBase):
     """Internal data storage class to efficiently store a list of snowflakes.
 
     This should have the following characteristics:
@@ -1042,7 +1062,7 @@ def _get_option_desc(lines: List[str]) -> Dict[str, _DocstringParam]:
     return options
 
 
-def parse_docstring(func: Callable) -> _ParsedDocstring:
+def parse_docstring(func: Callable[..., Any]) -> _ParsedDocstring:
     doc = _getdoc(func)
     if doc is None:
         return {

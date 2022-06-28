@@ -24,9 +24,10 @@ DEALINGS IN THE SOFTWARE.
 """
 
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar, Union
 
 if TYPE_CHECKING:
+    from .bot import AutoShardedBot, Bot
     from .cog import Cog
     from .context import Context
     from .errors import CommandError
@@ -45,6 +46,10 @@ Error = Union[
     Callable[["Cog", "Context[Any]", "CommandError"], Coro[Any]],
     Callable[["Context[Any]", "CommandError"], Coro[Any]],
 ]
+
+AnyBot = Union["Bot", "AutoShardedBot"]
+CogT = TypeVar("CogT", bound="Optional[Cog]")
+BotT = TypeVar("BotT", bound="AnyBot")
 
 
 # This is merely a tag type to avoid circular import issues.

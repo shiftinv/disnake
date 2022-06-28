@@ -88,6 +88,8 @@ if TYPE_CHECKING:
     from ..ui.action_row import Components
     from ..ui.view import View
 
+    AnyState = Union[ConnectionState, "_WebhookState[Any]"]
+
 MISSING = utils.MISSING
 
 
@@ -695,7 +697,7 @@ WebhookT = TypeVar("WebhookT", bound="BaseWebhook")
 class _WebhookState(Generic[WebhookT]):
     __slots__ = ("_parent", "_webhook")
 
-    def __init__(self, webhook: WebhookT, parent: Optional[Union[ConnectionState, _WebhookState]]):
+    def __init__(self, webhook: WebhookT, parent: Optional[AnyState]):
         self._webhook: WebhookT = webhook
 
         self._parent: Optional[ConnectionState]
@@ -918,12 +920,10 @@ class BaseWebhook(Hashable):
         self,
         data: WebhookPayload,
         token: Optional[str] = None,
-        state: Optional[ConnectionState] = None,
+        state: Optional[AnyState] = None,
     ):
         self.auth_token: Optional[str] = token
-        self._state: Union[ConnectionState, _WebhookState] = state or _WebhookState(
-            self, parent=state
-        )
+        self._state: AnyState = state or _WebhookState(self, parent=state)
         self._update(data)
 
     def _update(self, data: WebhookPayload):

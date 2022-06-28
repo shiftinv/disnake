@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, Type
 
 import aiohttp
 
@@ -103,8 +103,8 @@ class Shard:
         self.loop: asyncio.AbstractEventLoop = self._client.loop
         self._disconnect: bool = False
         self._reconnect = client._reconnect
-        self._backoff: ExponentialBackoff = ExponentialBackoff()
-        self._task: Optional[asyncio.Task] = None
+        self._backoff: ExponentialBackoff[Literal[False]] = ExponentialBackoff()
+        self._task: Optional[asyncio.Task[None]] = None
         self._handled_exceptions: Tuple[Type[Exception], ...] = (
             OSError,
             HTTPException,

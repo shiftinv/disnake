@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Any, Dict
 from unittest import mock
 
 import pytest
@@ -47,7 +47,7 @@ def test_classmethod_all() -> None:
         (AllowedMentions.none(), {"parse": []}),
     ],
 )
-def test_to_dict(am: AllowedMentions, expected: Dict[str, Union[bool, list]]) -> None:
+def test_to_dict(am: AllowedMentions, expected: Dict[str, Any]) -> None:
     assert expected == am.to_dict()
 
 

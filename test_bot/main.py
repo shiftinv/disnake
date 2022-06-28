@@ -51,7 +51,9 @@ class TestBot(commands.Bot):
         )
         # fmt: on
 
-    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
+    async def on_command_error(
+        self, ctx: commands.Context["TestBot"], error: commands.CommandError
+    ) -> None:
         embed = disnake.Embed(
             title=f"Command `{ctx.command}` failed due to `{error}`",
             description=fancy_traceback(error),

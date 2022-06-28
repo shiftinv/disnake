@@ -37,7 +37,8 @@ if TYPE_CHECKING:
     from disnake.threads import Thread
     from disnake.types.snowflake import Snowflake, SnowflakeList
 
-    from .context import Context
+    from ._types import BotT
+    from .context import AnyContext
     from .cooldowns import BucketType, Cooldown
     from .flag_converter import Flag
 
@@ -228,9 +229,11 @@ class CheckAnyFailure(CheckFailure):
         A list of check predicates that failed.
     """
 
-    def __init__(self, checks: List[CheckFailure], errors: List[Callable[[Context], bool]]) -> None:
+    def __init__(
+        self, checks: List[CheckFailure], errors: List[Callable[[AnyContext[BotT]], bool]]
+    ) -> None:
         self.checks: List[CheckFailure] = checks
-        self.errors: List[Callable[[Context], bool]] = errors
+        self.errors: List[Callable[[AnyContext[BotT]], bool]] = errors
         super().__init__("You do not have permission to run this command.")
 
 
@@ -823,10 +826,10 @@ class BadUnionArgument(UserInputError):
     """
 
     def __init__(
-        self, param: Parameter, converters: Tuple[Type, ...], errors: List[CommandError]
+        self, param: Parameter, converters: Tuple[Type[Any], ...], errors: List[CommandError]
     ) -> None:
         self.param: Parameter = param
-        self.converters: Tuple[Type, ...] = converters
+        self.converters: Tuple[Type[Any], ...] = converters
         self.errors: List[CommandError] = errors
 
         def _get_name(x):

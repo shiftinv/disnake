@@ -41,7 +41,7 @@ from typing import (
 
 __all__ = ("Item", "WrappedComponent")
 
-ItemT = TypeVar("ItemT", bound="Item")
+ItemT = TypeVar("ItemT", bound="Item[Any]")
 V_co = TypeVar("V_co", bound="Optional[View]", covariant=True)
 
 if TYPE_CHECKING:
@@ -180,19 +180,16 @@ class Item(WrappedComponent, Generic[V_co]):
         pass
 
 
-I_co = TypeVar("I_co", bound=Item, covariant=True)
-
-
 # while the decorators don't actually return a descriptor that matches this protocol,
 # this protocol ensures that type checkers don't complain about statements like `self.button.disabled = True`,
 # which work as `View.__init__` replaces the handler with the item
-class DecoratedItem(Protocol[I_co]):
+class DecoratedItem(Protocol[ItemT]):
     @overload
-    def __get__(self, obj: None, objtype: Any) -> ItemCallbackType:
+    def __get__(self, obj: None, objtype: Any) -> ItemCallbackType[ItemT]:
         ...
 
     @overload
-    def __get__(self, obj: Any, objtype: Any) -> I_co:
+    def __get__(self, obj: Any, objtype: Any) -> ItemT:
         ...
 
 

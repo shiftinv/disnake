@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import io
 import os
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 __all__ = ("File",)
 
@@ -77,7 +77,7 @@ class File:
 
     def __init__(
         self,
-        fp: Union[str, bytes, os.PathLike, io.BufferedIOBase],
+        fp: Union[str, bytes, os.PathLike[Any], io.BufferedIOBase],
         filename: Optional[str] = None,
         *,
         spoiler: bool = False,

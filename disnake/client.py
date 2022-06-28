@@ -358,7 +358,7 @@ class Client:
         self.ws: DiscordWebSocket = None  # type: ignore
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         self.loop.set_debug(asyncio_debug)
-        self._listeners: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
+        self._listeners: Dict[str, List[Tuple[asyncio.Future[Any], Callable[..., bool]]]] = {}
         self.shard_id: Optional[int] = options.get("shard_id")
         self.shard_count: Optional[int] = options.get("shard_count")
         self.session_start_limit: Optional[SessionStartLimit] = None
@@ -371,12 +371,14 @@ class Client:
             connector, proxy=proxy, proxy_auth=proxy_auth, unsync_clock=unsync_clock, loop=self.loop
         )
 
-        self._handlers: Dict[str, Callable] = {
+        self._handlers: Dict[str, Callable[..., None]] = {
             "ready": self._handle_ready,
             "connect_internal": self._handle_first_connect,
         }
 
-        self._hooks: Dict[str, Callable] = {"before_identify": self._call_before_identify_hook}
+        self._hooks: Dict[str, Callable[..., Coroutine[Any, Any, Any]]] = {
+            "before_identify": self._call_before_identify_hook
+        }
 
         self._enable_debug_events: bool = options.pop("enable_debug_events", False)
         self._connection: ConnectionState = self._get_state(**options)
@@ -631,7 +633,7 @@ class Client:
         event_name: str,
         *args: Any,
         **kwargs: Any,
-    ) -> asyncio.Task:
+    ) -> asyncio.Task[None]:
         wrapped = self._run_event(coro, event_name, *args, **kwargs)
         # Schedules the task
         return asyncio.create_task(wrapped, name=f"disnake: {event_name}")

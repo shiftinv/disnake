@@ -61,8 +61,7 @@ if TYPE_CHECKING:
 else:
     ParamSpec = TypeVar
 
-B = TypeVar("B", bound="Button")
-B_co = TypeVar("B_co", bound="Button", covariant=True)
+B_co = TypeVar("B_co", bound="Button[Any]", covariant=True)
 V_co = TypeVar("V_co", bound="Optional[View]", covariant=True)
 P = ParamSpec("P")
 

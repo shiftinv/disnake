@@ -33,19 +33,7 @@ import os
 import sys
 import time
 import types
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Set, TypeVar, Union
 
 import disnake
 import disnake.utils
@@ -63,7 +51,6 @@ if TYPE_CHECKING:
 
 __all__ = ("CommonBotBase",)
 
-CogT = TypeVar("CogT", bound="Cog")
 CFT = TypeVar("CFT", bound="CoroFunc")
 
 MISSING: Any = disnake.utils.MISSING
@@ -73,7 +60,7 @@ def _is_submodule(parent: str, child: str) -> bool:
     return parent == child or child.startswith(parent + ".")
 
 
-class CommonBotBase(Generic[CogT]):
+class CommonBotBase:
     def __init__(self, *args, **kwargs):
         self.__cogs: Dict[str, Cog] = {}
         self.__extensions: Dict[str, types.ModuleType] = {}

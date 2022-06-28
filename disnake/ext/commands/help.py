@@ -23,18 +23,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
+
 import copy
 import functools
 import itertools
 import re
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional
 
 import disnake.utils
 
+from ._types import AnyBot, CogT
 from .core import Command, Group
 from .errors import CommandError
 
 if TYPE_CHECKING:
+    from .cog import Cog
     from .context import Context
 
 __all__ = (
@@ -190,7 +194,7 @@ def _not_overriden(f):
     return f
 
 
-class _HelpCommandImpl(Command):
+class _HelpCommandImpl(Command[CogT, Any, None]):
     def __init__(self, inject, *args, **kwargs):
         super().__init__(inject.command_callback, *args, **kwargs)
         self._original = inject
@@ -332,7 +336,7 @@ class HelpCommand:
         self.command_attrs = attrs = options.pop("command_attrs", {})
         attrs.setdefault("name", "help")
         attrs.setdefault("help", "Shows this message")
-        self.context: Context = disnake.utils.MISSING
+        self.context: Context[AnyBot] = disnake.utils.MISSING
         self._command_impl = _HelpCommandImpl(self, **self.command_attrs)
 
     def copy(self):
@@ -381,7 +385,9 @@ class HelpCommand:
     def get_bot_mapping(self):
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
         bot = self.context.bot
-        mapping = {cog: cog.get_commands() for cog in bot.cogs.values()}
+        mapping: Dict[Optional[Cog], List[Command[Any, ..., Any]]] = {
+            cog: cog.get_commands() for cog in bot.cogs.values()
+        }
         mapping[None] = [c for c in bot.commands if c.cog is None]
         return mapping
 
@@ -535,10 +541,10 @@ class HelpCommand:
 
     async def filter_commands(
         self,
-        commands: Iterable[Command[Any, Any, Any]],
+        commands: Iterable[Command[Any, ..., Any]],
         *,
         sort: bool = False,
-        key: Optional[Callable[[Command[Any, Any, Any]], Any]] = None,
+        key: Optional[Callable[[Command[Any, ..., Any]], Any]] = None,
     ):
         """|coro|
 

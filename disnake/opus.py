@@ -131,15 +131,15 @@ signal_ctl: SignalCtl = {
 }
 
 
-def _err_lt(result: int, func: Callable, args: List) -> int:
+def _err_lt(result: int, func: Callable[..., Any], args: List[Any]) -> int:
     if result < OK:
         _log.info("error has happened in %s", func.__name__)
         raise OpusError(result)
     return result
 
 
-def _err_ne(result: T, func: Callable, args: List) -> T:
-    ret = args[-1]._obj
+def _err_ne(result: T, func: Callable[..., Any], args: List[Any]) -> T:
+    ret: ctypes.c_int = args[-1]._obj
     if ret.value != OK:
         _log.info("error has happened in %s", func.__name__)
         raise OpusError(ret.value)

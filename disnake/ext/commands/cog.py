@@ -54,6 +54,7 @@ if TYPE_CHECKING:
 
     from disnake.interactions import ApplicationCommandInteraction
 
+    from ._types import BotT
     from .bot import AutoShardedBot, AutoShardedInteractionBot, Bot, InteractionBot
     from .context import Context
     from .core import Command
@@ -163,7 +164,7 @@ class CogMeta(type):
     __cog_slash_settings__: Dict[str, Any]
     __cog_user_settings__: Dict[str, Any]
     __cog_message_settings__: Dict[str, Any]
-    __cog_commands__: List[Command]
+    __cog_commands__: List[Command[Any, ..., Any]]
     __cog_app_commands__: List[InvokableApplicationCommand]
     __cog_listeners__: List[Tuple[str, str]]
 
@@ -256,7 +257,7 @@ class Cog(metaclass=CogMeta):
 
     __cog_name__: ClassVar[str]
     __cog_settings__: ClassVar[Dict[str, Any]]
-    __cog_commands__: ClassVar[List[Command]]
+    __cog_commands__: ClassVar[List[Command[Self, ..., Any]]]
     __cog_app_commands__: ClassVar[List[InvokableApplicationCommand]]
     __cog_listeners__: ClassVar[List[Tuple[str, str]]]
 
@@ -303,7 +304,7 @@ class Cog(metaclass=CogMeta):
 
         return self
 
-    def get_commands(self) -> List[Command]:
+    def get_commands(self) -> List[Command[Self, ..., Any]]:
         """
         Returns a list of commands the cog has.
 
@@ -389,7 +390,7 @@ class Cog(metaclass=CogMeta):
     def description(self, description: str) -> None:
         self.__cog_description__ = description
 
-    def walk_commands(self) -> Generator[Command, None, None]:
+    def walk_commands(self) -> Generator[Command[Self, ..., Any], None, None]:
         """An iterator that recursively walks through this cog's commands and subcommands.
 
         Yields
@@ -510,7 +511,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    def bot_check_once(self, ctx: Context) -> bool:
+    def bot_check_once(self, ctx: Context[BotT]) -> bool:
         """A special method that registers as a :meth:`.Bot.check_once`
         check.
 
@@ -522,7 +523,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    def bot_check(self, ctx: Context) -> bool:
+    def bot_check(self, ctx: Context[BotT]) -> bool:
         """A special method that registers as a :meth:`.Bot.check`
         check.
 
@@ -574,7 +575,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    def cog_check(self, ctx: Context) -> bool:
+    def cog_check(self, ctx: Context[BotT]) -> bool:
         """A special method that registers as a :func:`~.ext.commands.check`
         for every text command and subcommand in this cog.
 
@@ -606,7 +607,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+    async def cog_command_error(self, ctx: Context[BotT], error: Exception) -> None:
         """A special method that is called whenever an error
         is dispatched inside this cog.
 
@@ -662,7 +663,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_before_invoke(self, ctx: Context) -> None:
+    async def cog_before_invoke(self, ctx: Context[BotT]) -> None:
         """A special method that acts as a cog local pre-invoke hook,
         similar to :meth:`.Command.before_invoke`.
 
@@ -678,7 +679,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_after_invoke(self, ctx: Context) -> None:
+    async def cog_after_invoke(self, ctx: Context[BotT]) -> None:
         """A special method that acts as a cog local post-invoke hook,
         similar to :meth:`.Command.after_invoke`.
 

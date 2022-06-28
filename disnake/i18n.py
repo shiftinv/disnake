@@ -303,7 +303,7 @@ class LocalizationProtocol(ABC):
         raise NotImplementedError
 
     # subtypes don't have to implement this
-    def load(self, path: Union[str, os.PathLike]) -> None:
+    def load(self, path: Union[str, os.PathLike[Any]]) -> None:
         """
         Adds localizations from the provided path.
 
@@ -373,7 +373,7 @@ class LocalizationStore(LocalizationProtocol):
             raise LocalizationKeyError(key)
         return data
 
-    def load(self, path: Union[str, os.PathLike]) -> None:
+    def load(self, path: Union[str, os.PathLike[Any]]) -> None:
         """
         Adds localizations from the provided path to the store.
         If the path points to a file, the file gets loaded.

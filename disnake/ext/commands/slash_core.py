@@ -23,10 +23,10 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
 from typing import (
     TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Dict,
     List,
@@ -49,10 +49,28 @@ from .errors import CommandError, CommandInvokeError
 from .params import call_param_func, expand_params
 
 if TYPE_CHECKING:
+    from typing_extensions import Concatenate, ParamSpec
+
     from disnake.app_commands import Choices
     from disnake.i18n import LocalizedOptional
 
-    from .base_core import CommandCallback
+    from .base_core import ApplicationCommandInteractionT, CogT, CommandCallback
+
+    P = ParamSpec("P")
+
+    BotAutocompleteCallback = Callable[
+        Concatenate[ApplicationCommandInteractionT, str, P],
+        Union[Choices, Awaitable[Choices]],
+    ]
+    CogAutocompleteCallback = Callable[
+        Concatenate[CogT, ApplicationCommandInteractionT, str, P],
+        Union[Choices, Awaitable[Choices]],
+    ]
+
+    AutocompleteCallback = Union[
+        CogAutocompleteCallback[CogT, ApplicationCommandInteractionT, P],
+        BotAutocompleteCallback[ApplicationCommandInteractionT, P],
+    ]
 
 MISSING = utils.MISSING
 
@@ -64,7 +82,10 @@ SlashCommandT = TypeVar("SlashCommandT", bound="InvokableSlashCommand")
 
 def _autocomplete(
     self: Union[SubCommand, InvokableSlashCommand], option_name: str
-) -> Callable[[Callable], Callable]:
+) -> Callable[
+    [AutocompleteCallback[CogT, ApplicationCommandInteractionT, P]],
+    AutocompleteCallback[CogT, ApplicationCommandInteractionT, P],
+]:
     exists = False
     for option in self.body.options:
         if option.name == option_name:
@@ -75,7 +96,9 @@ def _autocomplete(
     if not exists:
         raise ValueError(f"Option '{option_name}' doesn't exist in '{self.qualified_name}'")
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(
+        func: AutocompleteCallback[CogT, ApplicationCommandInteractionT, P]
+    ) -> AutocompleteCallback[CogT, ApplicationCommandInteractionT, P]:
         func.__slash_command__ = self
         self.autocompleters[option_name] = func
         return func
@@ -102,20 +125,22 @@ async def _call_autocompleter(
 
     filled = inter.filled_options
     del filled[inter.data.focused_option.name]
+    # TODO: rewrite this to not use try/catch
+    choices: Union[Choices, Awaitable[Choices]]
     try:
         if cog is None:
-            choices = autocomp(inter, user_input, **filled)
+            choices = autocomp(inter, user_input, **filled)  # type: ignore
         else:
-            choices = autocomp(cog, inter, user_input, **filled)
+            choices = autocomp(cog, inter, user_input, **filled)  # type: ignore
     except TypeError:
         if cog is None:
-            choices = autocomp(inter, user_input)
+            choices = autocomp(inter, user_input)  # type: ignore
         else:
-            choices = autocomp(cog, inter, user_input)
+            choices = autocomp(cog, inter, user_input)  # type: ignore
 
-    if inspect.isawaitable(choices):
+    if utils.is_awaitable(choices):
         return await choices
-    return choices
+    return choices  # type: ignore  # typeguard doesn't narrow in the negative case
 
 
 class SubCommandGroup(InvokableApplicationCommand):
@@ -188,8 +213,8 @@ class SubCommandGroup(InvokableApplicationCommand):
         self,
         name: LocalizedOptional = None,
         description: LocalizedOptional = None,
-        options: list = None,
-        connectors: dict = None,
+        options: List[Option] = None,
+        connectors: Dict[str, str] = None,
         extras: Dict[str, Any] = None,
         **kwargs,
     ) -> Callable[[CommandCallback], SubCommand]:
@@ -265,14 +290,16 @@ class SubCommand(InvokableApplicationCommand):
         *,
         name: LocalizedOptional = None,
         description: LocalizedOptional = None,
-        options: list = None,
+        options: List[Option] = None,
         connectors: Dict[str, str] = None,
         **kwargs,
     ):
         name_loc = Localized._cast(name, False)
         super().__init__(func, name=name_loc.string, **kwargs)
         self.connectors: Dict[str, str] = connectors or {}
-        self.autocompleters: Dict[str, Any] = kwargs.get("autocompleters", {})
+        self.autocompleters: Dict[str, AutocompleteCallback[Any, Any, ...]] = kwargs.get(
+            "autocompleters", {}
+        )
 
         if options is None:
             options = expand_params(self)
@@ -336,7 +363,12 @@ class SubCommand(InvokableApplicationCommand):
 
             await self.call_after_hooks(inter)
 
-    def autocomplete(self, option_name: str) -> Callable[[Callable], Callable]:
+    def autocomplete(
+        self, option_name: str
+    ) -> Callable[
+        [AutocompleteCallback[CogT, ApplicationCommandInteractionT, P]],
+        AutocompleteCallback[CogT, ApplicationCommandInteractionT, P],
+    ]:
         """A decorator that registers an autocomplete function for the specified option.
 
         Parameters
@@ -409,7 +441,9 @@ class InvokableSlashCommand(InvokableApplicationCommand):
         self.children: Dict[str, Union[SubCommand, SubCommandGroup]] = {}
         self.auto_sync: bool = True if auto_sync is None else auto_sync
         self.guild_ids: Optional[Tuple[int, ...]] = None if guild_ids is None else tuple(guild_ids)
-        self.autocompleters: Dict[str, Any] = kwargs.get("autocompleters", {})
+        self.autocompleters: Dict[str, AutocompleteCallback[Any, Any, ...]] = kwargs.get(
+            "autocompleters", {}
+        )
 
         if options is None:
             options = expand_params(self)
@@ -472,8 +506,8 @@ class InvokableSlashCommand(InvokableApplicationCommand):
         self,
         name: LocalizedOptional = None,
         description: LocalizedOptional = None,
-        options: list = None,
-        connectors: dict = None,
+        options: List[Option] = None,
+        connectors: Dict[str, str] = None,
         extras: Dict[str, Any] = None,
         **kwargs,
     ) -> Callable[[CommandCallback], SubCommand]:
@@ -580,7 +614,12 @@ class InvokableSlashCommand(InvokableApplicationCommand):
 
         return decorator
 
-    def autocomplete(self, option_name: str) -> Callable[[Callable], Callable]:
+    def autocomplete(
+        self, option_name: str
+    ) -> Callable[
+        [AutocompleteCallback[CogT, ApplicationCommandInteractionT, P]],
+        AutocompleteCallback[CogT, ApplicationCommandInteractionT, P],
+    ]:
         """
         A decorator that registers an autocomplete function for the specified option.
 

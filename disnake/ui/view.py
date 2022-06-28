@@ -34,6 +34,7 @@ from functools import partial
 from itertools import groupby
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     ClassVar,
     Dict,
@@ -59,6 +60,8 @@ __all__ = ("View",)
 
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from ..interactions import MessageInteraction
     from ..message import Message
     from ..state import ConnectionState
@@ -73,7 +76,7 @@ def _walk_all_components(
         yield from item.children
 
 
-def _component_to_item(component: NestedComponent) -> Item:
+def _component_to_item(component: NestedComponent) -> Item[Any]:
     if isinstance(component, ButtonComponent):
         from .button import Button
 
@@ -88,23 +91,23 @@ def _component_to_item(component: NestedComponent) -> Item:
 class _ViewWeights:
     __slots__ = ("weights",)
 
-    def __init__(self, children: List[Item]):
+    def __init__(self, children: List[Item[Any]]):
         self.weights: List[int] = [0, 0, 0, 0, 0]
 
-        key: Callable[[Item[View]], int] = lambda i: sys.maxsize if i.row is None else i.row
+        key: Callable[[Item[Any]], int] = lambda i: sys.maxsize if i.row is None else i.row
         children = sorted(children, key=key)
         for _, group in groupby(children, key=key):
             for item in group:
                 self.add_item(item)
 
-    def find_open_space(self, item: Item) -> int:
+    def find_open_space(self, item: Item[Any]) -> int:
         for index, weight in enumerate(self.weights):
             if weight + item.width <= 5:
                 return index
 
         raise ValueError("could not find open space for item")
 
-    def add_item(self, item: Item) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         if item.row is not None:
             total = self.weights[item.row] + item.width
             if total > 5:
@@ -116,7 +119,7 @@ class _ViewWeights:
             self.weights[index] += item.width
             item._rendered_row = index
 
-    def remove_item(self, item: Item) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         if item._rendered_row is not None:
             self.weights[item._rendered_row] -= item.width
             item._rendered_row = None
@@ -152,10 +155,10 @@ class View:
     """
 
     __discord_ui_view__: ClassVar[bool] = True
-    __view_children_items__: ClassVar[List[ItemCallbackType[Item]]] = []
+    __view_children_items__: ClassVar[List[ItemCallbackType[Item[Any]]]] = []
 
     def __init_subclass__(cls) -> None:
-        children: List[ItemCallbackType[Item]] = []
+        children: List[ItemCallbackType[Item[Any]]] = []
         for base in reversed(cls.__mro__):
             for member in base.__dict__.values():
                 if hasattr(member, "__discord_ui_model_type__"):
@@ -168,9 +171,9 @@ class View:
 
     def __init__(self, *, timeout: Optional[float] = 180.0):
         self.timeout = timeout
-        self.children: List[Item] = []
+        self.children: List[Item[Self]] = []
         for func in self.__view_children_items__:
-            item: Item = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
+            item: Item[Self] = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
             item.callback = partial(func, self, item)
             item._view = self
             setattr(self, func.__name__, item)
@@ -205,7 +208,7 @@ class View:
             await asyncio.sleep(self.__timeout_expiry - now)
 
     def to_components(self) -> List[ActionRowPayload]:
-        def key(item: Item) -> int:
+        def key(item: Item[Any]) -> int:
             return item._rendered_row or 0
 
         children = sorted(self.children, key=key)
@@ -257,7 +260,7 @@ class View:
             return time.monotonic() + self.timeout
         return None
 
-    def add_item(self, item: Item) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         """Adds an item to the view.
 
         Parameters
@@ -284,7 +287,7 @@ class View:
         item._view = self
         self.children.append(item)
 
-    def remove_item(self, item: Item) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         """Removes an item from the view.
 
         Parameters
@@ -339,7 +342,9 @@ class View:
         """
         pass
 
-    async def on_error(self, error: Exception, item: Item, interaction: MessageInteraction) -> None:
+    async def on_error(
+        self, error: Exception, item: Item[Self], interaction: MessageInteraction
+    ) -> None:
         """|coro|
 
         A callback that is called when an item's callback or :meth:`interaction_check`
@@ -359,7 +364,7 @@ class View:
         print(f"Ignoring exception in view {self} for item {item}:", file=sys.stderr)
         traceback.print_exception(error.__class__, error, error.__traceback__, file=sys.stderr)
 
-    async def _scheduled_task(self, item: Item, interaction: MessageInteraction):
+    async def _scheduled_task(self, item: Item[Self], interaction: MessageInteraction):
         try:
             if self.timeout:
                 self.__timeout_expiry = time.monotonic() + self.timeout
@@ -389,7 +394,7 @@ class View:
         self.__stopped.set_result(True)
         asyncio.create_task(self.on_timeout(), name=f"disnake-ui-view-timeout-{self.id}")
 
-    def _dispatch_item(self, item: Item, interaction: MessageInteraction):
+    def _dispatch_item(self, item: Item[View], interaction: MessageInteraction):
         if self.__stopped.done():
             return
 
@@ -399,14 +404,14 @@ class View:
 
     def refresh(self, components: List[ActionRowComponent[MessageComponent]]):
         # TODO: this is pretty hacky at the moment
-        old_state: Dict[Tuple[int, str], Item] = {
+        old_state: Dict[Tuple[int, str], Item[View]] = {
             (item.type.value, item.custom_id): item  # type: ignore
             for item in self.children
             if item.is_dispatchable()
         }
-        children: List[Item] = []
+        children: List[Item[View]] = []
         for component in _walk_all_components(components):
-            older: Optional[Item] = None
+            older: Optional[Item[View]] = None
             try:
                 older = old_state[(component.type.value, component.custom_id)]  # type: ignore
             except (KeyError, AttributeError):
@@ -488,7 +493,7 @@ class View:
 class ViewStore:
     def __init__(self, state: ConnectionState):
         # (component_type, message_id, custom_id): (View, Item)
-        self._views: Dict[Tuple[int, Optional[int], str], Tuple[View, Item]] = {}
+        self._views: Dict[Tuple[int, Optional[int], str], Tuple[View, Item[View]]] = {}
         # message_id: View
         self._synced_message_views: Dict[int, View] = {}
         self._state: ConnectionState = state

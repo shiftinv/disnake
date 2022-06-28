@@ -307,7 +307,7 @@ class _Semaphore:
     def __init__(self, number: int) -> None:
         self.value: int = number
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-        self._waiters: Deque[asyncio.Future] = deque()
+        self._waiters: Deque[asyncio.Future[None]] = deque()
 
     def __repr__(self) -> str:
         return f"<_Semaphore value={self.value} waiters={len(self._waiters)}>"

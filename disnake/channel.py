@@ -2805,7 +2805,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         stickers: Sequence[Union[GuildSticker, StickerItem]] = ...,
         allowed_mentions: AllowedMentions = ...,
         view: View = ...,
-        components: Components = ...,
+        components: Components[MessageUIComponent] = ...,
         reason: Optional[str] = None,
     ) -> ThreadWithMessage:
         ...
@@ -2824,7 +2824,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         stickers: Sequence[Union[GuildSticker, StickerItem]] = ...,
         allowed_mentions: AllowedMentions = ...,
         view: View = ...,
-        components: Components = ...,
+        components: Components[MessageUIComponent] = ...,
         reason: Optional[str] = None,
     ) -> ThreadWithMessage:
         ...
@@ -2843,7 +2843,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         stickers: Sequence[Union[GuildSticker, StickerItem]] = ...,
         allowed_mentions: AllowedMentions = ...,
         view: View = ...,
-        components: Components = ...,
+        components: Components[MessageUIComponent] = ...,
         reason: Optional[str] = None,
     ) -> ThreadWithMessage:
         ...
@@ -2862,7 +2862,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         stickers: Sequence[Union[GuildSticker, StickerItem]] = ...,
         allowed_mentions: AllowedMentions = ...,
         view: View = ...,
-        components: Components = ...,
+        components: Components[MessageUIComponent] = ...,
         reason: Optional[str] = None,
     ) -> ThreadWithMessage:
         ...

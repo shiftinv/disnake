@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from .client import Client
-    from .state import ConnectionState
+    from .state import ConnectionState, DispatchFunc
     from .types.gateway import (
         GatewayPayload,
         HeartbeatCommand,
@@ -83,10 +83,6 @@ if TYPE_CHECKING:
     from .voice_client import VoiceClient
 
     T = TypeVar("T")
-
-    class DispatchFunc(Protocol):
-        def __call__(self, event: str, *args: Any) -> None:
-            ...
 
     class CallHooksFunc(Protocol):
         async def __call__(self, key: str, *args: Any, **kwargs: Any) -> None:

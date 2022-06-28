@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import io
 import os
-from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Tuple, Union
 
 import yarl
 
@@ -83,7 +83,7 @@ class AssetMixin:
         return await self._state.http.get_from_cdn(self.url)
 
     async def save(
-        self, fp: Union[str, bytes, os.PathLike, io.BufferedIOBase], *, seek_begin: bool = True
+        self, fp: Union[str, bytes, os.PathLike[Any], io.BufferedIOBase], *, seek_begin: bool = True
     ) -> int:
         """|coro|
 

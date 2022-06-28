@@ -758,10 +758,14 @@ def test_normalise_optional_params(params, expected):
         # unions
         (Union[timezone, float], Union[timezone, float], False),
         (Optional[int], Optional[int], False),
-        (Union["tuple", None, int], Union[tuple, int, None], True),
+        (Union["Tuple[int]", None, int], Union[Tuple[int], int, None], True),
         # forward refs
         ("bool", bool, True),
-        ("Tuple[dict, List[Literal[42, 99]]]", Tuple[dict, List[Literal[42, 99]]], True),
+        (
+            "Tuple[Dict[str, str], List[Literal[42, 99]]]",
+            Tuple[Dict[str, str], List[Literal[42, 99]]],
+            True,
+        ),
         # 3.10 union syntax
         pytest.param(
             "int | Literal[False]",

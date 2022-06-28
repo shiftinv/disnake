@@ -109,7 +109,7 @@ class flag_value(Generic[T]):
         return f"<flag_value flag={self.flag!r}>"
 
 
-class alias_flag_value(flag_value):
+class alias_flag_value(flag_value[Any]):
     pass
 
 

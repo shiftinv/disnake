@@ -65,8 +65,7 @@ else:
     ParamSpec = TypeVar
 
 
-S = TypeVar("S", bound="Select")
-S_co = TypeVar("S_co", bound="Select", covariant=True)
+S_co = TypeVar("S_co", bound="Select[Any]", covariant=True)
 V_co = TypeVar("V_co", bound="Optional[View]", covariant=True)
 P = ParamSpec("P")
 

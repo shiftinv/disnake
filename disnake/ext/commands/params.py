@@ -70,7 +70,12 @@ if TYPE_CHECKING:
     from disnake.i18n import LocalizationValue, LocalizedOptional
     from disnake.types.interactions import ApplicationCommandOptionChoiceValue
 
-    from .slash_core import InvokableSlashCommand, SubCommand
+    from .slash_core import (
+        ApplicationCommandInteractionT,
+        BotAutocompleteCallback,
+        InvokableSlashCommand,
+        SubCommand,
+    )
 
     AnySlashCommand = Union[InvokableSlashCommand, SubCommand]
 
@@ -131,7 +136,7 @@ def remove_optionals(annotation: Any) -> Any:
     return annotation
 
 
-def signature(func: Callable) -> inspect.Signature:
+def signature(func: Callable[..., Any]) -> inspect.Signature:
     """Get the signature with evaluated annotations wherever possible
 
     This is equivalent to `signature(..., eval_str=True)` in python 3.10
@@ -182,9 +187,9 @@ def _xt_to_xe(xe: Optional[float], xt: Optional[float], direction: float = 1) ->
 class Injection:
     _registered: ClassVar[Dict[Any, Injection]] = {}
 
-    function: Callable
+    function: Callable[..., Any]
 
-    def __init__(self, function: Callable) -> None:
+    def __init__(self, function: Callable[..., Any]) -> None:
         self.function = function
 
     @classmethod
@@ -401,7 +406,7 @@ class ParamInfo:
         disnake.Attachment:                                OptionType.attachment.value,
         # fmt: on
     }
-    _registered_converters: ClassVar[Dict[type, Callable]] = {}
+    _registered_converters: ClassVar[Dict[type, Callable[..., Any]]] = {}
 
     def __init__(
         self,
@@ -411,7 +416,7 @@ class ParamInfo:
         description: LocalizedOptional = None,
         converter: Callable[[ApplicationCommandInteraction, Any], Any] = None,
         convert_default: bool = False,
-        autcomplete: Callable[[ApplicationCommandInteraction, str], Any] = None,
+        autcomplete: BotAutocompleteCallback[ApplicationCommandInteractionT, ...] = None,
         choices: Choices = None,
         type: type = None,
         channel_types: List[ChannelType] = None,
@@ -644,7 +649,9 @@ class ParamInfo:
 
         return True
 
-    def parse_converter_annotation(self, converter: Callable, fallback_annotation: Any) -> None:
+    def parse_converter_annotation(
+        self, converter: Callable[..., Any], fallback_annotation: Any
+    ) -> None:
         _, parameters = isolate_self(converter)
 
         if len(parameters) != 1:
@@ -753,7 +760,7 @@ def safe_call(function: Callable[..., T], /, *possible_args: Any, **possible_kwa
 
 
 def isolate_self(
-    function: Callable,
+    function: Callable[..., Any],
 ) -> Tuple[Tuple[Optional[inspect.Parameter], ...], Dict[str, inspect.Parameter]]:
     """Create parameters without self and the first interaction"""
     sig = signature(function)
@@ -779,7 +786,7 @@ def isolate_self(
 
 
 def collect_params(
-    function: Callable,
+    function: Callable[..., Any],
 ) -> Tuple[Optional[str], Optional[str], List[ParamInfo], Dict[str, Injection]]:
     """Collect all parameters in a function
 
@@ -828,7 +835,7 @@ def collect_params(
     )
 
 
-def collect_nested_params(function: Callable) -> List[ParamInfo]:
+def collect_nested_params(function: Callable[..., Any]) -> List[ParamInfo]:
     """Collect all options from a function"""
     # TODO: Have these be actually sorted properly and not have injections always at the end
 
@@ -885,7 +892,11 @@ async def run_injections(
 
 
 async def call_param_func(
-    function: Callable, interaction: ApplicationCommandInteraction, /, *args: Any, **kwargs: Any
+    function: Callable[..., Any],
+    interaction: ApplicationCommandInteraction,
+    /,
+    *args: Any,
+    **kwargs: Any,
 ) -> Any:
     """Call a function utilizing ParamInfo"""
     cog_param, inter_param, paraminfos, injections = collect_params(function)
@@ -941,7 +952,7 @@ def Param(
     choices: Choices = None,
     converter: Callable[[ApplicationCommandInteraction, Any], Any] = None,
     convert_defaults: bool = False,
-    autocomplete: Callable[[ApplicationCommandInteraction, str], Any] = None,
+    autocomplete: BotAutocompleteCallback[ApplicationCommandInteractionT, ...] = None,
     channel_types: List[ChannelType] = None,
     lt: float = None,
     le: float = None,
@@ -1092,7 +1103,13 @@ def option_enum(
     return Enum("", choices, type=type(first))
 
 
-class ConverterMethod(classmethod):
+if TYPE_CHECKING:
+    _ConverterMethodBase = classmethod[Any]
+else:
+    _ConverterMethodBase = classmethod
+
+
+class ConverterMethod(_ConverterMethodBase):
     """A class to help register a method as a converter method."""
 
     def __set_name__(self, owner: Any, name: str):

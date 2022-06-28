@@ -1,17 +1,16 @@
 import contextlib
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Iterator, Type
 
 import pytest
 from typing_extensions import assert_type
 
 from disnake import ui
 from disnake.ui.button import V_co
-
-T = TypeVar("T", bound=ui.Item)
+from disnake.ui.item import ItemT
 
 
 @contextlib.contextmanager
-def create_callback(item_type: Type[T]) -> Iterator["ui.item.ItemCallbackType[T]"]:
+def create_callback(item_type: Type[ItemT]) -> Iterator["ui.item.ItemCallbackType[ItemT]"]:
     async def callback(self, item, inter):
         pytest.fail("callback should not be invoked")
 
@@ -21,6 +20,10 @@ def create_callback(item_type: Type[T]) -> Iterator["ui.item.ItemCallbackType[T]
     assert callback.__discord_ui_model_type__(**callback.__discord_ui_model_kwargs__)
 
 
+class CustomView(ui.View):
+    pass
+
+
 class _CustomButton(ui.Button[V_co]):
     def __init__(self, *, param: float = 42.0):
         pass
@@ -28,16 +31,16 @@ class _CustomButton(ui.Button[V_co]):
 
 class TestDecorator:
     def test_default(self) -> None:
-        with create_callback(ui.Button) as func:
+        with create_callback(ui.Button[CustomView]) as func:
             res = ui.button(custom_id="123")(func)
-            assert_type(res, ui.item.DecoratedItem[ui.Button])
+            assert_type(res, ui.item.DecoratedItem[ui.Button[CustomView]])
 
             assert func.__discord_ui_model_type__ is ui.Button
             assert func.__discord_ui_model_kwargs__ == {"custom_id": "123"}
 
-        with create_callback(ui.Select) as func:
+        with create_callback(ui.Select[CustomView]) as func:
             res = ui.select(custom_id="123")(func)
-            assert_type(res, ui.item.DecoratedItem[ui.Select])
+            assert_type(res, ui.item.DecoratedItem[ui.Select[CustomView]])
 
             assert func.__discord_ui_model_type__ is ui.Select
             assert func.__discord_ui_model_kwargs__ == {"custom_id": "123"}
@@ -46,7 +49,7 @@ class TestDecorator:
     # as @ui.select works identically
 
     @pytest.mark.parametrize("cls", [_CustomButton, _CustomButton[Any]])
-    def test_cls(self, cls: Type[_CustomButton]) -> None:
+    def test_cls(self, cls: Type[_CustomButton[Any]]) -> None:
         with create_callback(cls) as func:
             res = ui.button(cls=cls, param=1337)(func)
             assert_type(res, ui.item.DecoratedItem[cls])

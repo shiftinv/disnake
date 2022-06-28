@@ -43,6 +43,7 @@ from typing import (
     List,
     Literal,
     Optional,
+    Protocol,
     Sequence,
     Tuple,
     TypeVar,
@@ -131,6 +132,10 @@ if TYPE_CHECKING:
     Channel = Union[GuildChannel, VocalGuildChannel, PrivateChannel]
     PartialChannel = Union[Channel, PartialMessageable]
 
+    class DispatchFunc(Protocol):
+        def __call__(self, event: str, *args: Any) -> None:
+            ...
+
 
 class ChunkRequest:
     def __init__(
@@ -199,9 +204,9 @@ class ConnectionState:
     def __init__(
         self,
         *,
-        dispatch: Callable,
-        handlers: Dict[str, Callable],
-        hooks: Dict[str, Callable],
+        dispatch: DispatchFunc,
+        handlers: Dict[str, Callable[..., None]],
+        hooks: Dict[str, Callable[..., Coroutine[Any, Any, Any]]],
         http: HTTPClient,
         loop: asyncio.AbstractEventLoop,
         **options: Any,
@@ -212,11 +217,11 @@ class ConnectionState:
         if self.max_messages is not None and self.max_messages <= 0:
             self.max_messages = 1000
 
-        self.dispatch: Callable = dispatch
-        self.handlers: Dict[str, Callable] = handlers
-        self.hooks: Dict[str, Callable] = hooks
+        self.dispatch: DispatchFunc = dispatch
+        self.handlers: Dict[str, Callable[..., None]] = handlers
+        self.hooks: Dict[str, Callable[..., Coroutine[Any, Any, Any]]] = hooks
         self.shard_count: Optional[int] = None
-        self._ready_task: Optional[asyncio.Task] = None
+        self._ready_task: Optional[asyncio.Task[None]] = None
         self.application_id: Optional[int] = utils._get_as_snowflake(options, "application_id")
         self.heartbeat_timeout: float = options.get("heartbeat_timeout", 60.0)
         self.guild_ready_timeout: float = options.get("guild_ready_timeout", 2.0)

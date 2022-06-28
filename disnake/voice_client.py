@@ -254,7 +254,7 @@ class VoiceClient(VoiceProtocol):
         self.sequence: int = 0
         self.timestamp: int = 0
         self.timeout: float = 0
-        self._runner: asyncio.Task = MISSING
+        self._runner: asyncio.Task[None] = MISSING
         self._player: Optional[AudioPlayer] = None
         self.encoder: Encoder = MISSING
         self._lite_nonce: int = 0

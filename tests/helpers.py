@@ -2,13 +2,13 @@ import asyncio
 import datetime
 import functools
 import types
-from typing import Callable, ContextManager, Optional, Type, TypeVar
+from typing import Any, Callable, ContextManager, Optional, Type, TypeVar
 from unittest import mock
 
-CallableT = TypeVar("CallableT", bound=Callable)
+CallableT = TypeVar("CallableT", bound=Callable[..., Any])
 
 
-class freeze_time(ContextManager):
+class freeze_time(ContextManager[mock.MagicMock]):
     """
     Helper class that freezes time at the given datetime by patching `datetime.now`.
     If no datetime is provided, defaults to the current time.

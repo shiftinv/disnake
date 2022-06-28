@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from disnake.ext import commands
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     )
 
 
-class CustomContext(commands.Context):
+class CustomContext(commands.Context[Any]):
     ...
 
 
@@ -64,10 +64,10 @@ class TestDecorators:
             )
 
     def _test_typing_cls(self):
-        class CustomCommand(commands.Command):
+        class CustomCommand(commands.Command[Any, ..., Any]):
             ...
 
-        class CustomGroup(commands.Group):
+        class CustomGroup(commands.Group[Any, ..., Any]):
             ...
 
         base = commands.GroupMixin[None]()
