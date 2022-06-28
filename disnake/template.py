@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from .guild import Guild
 from .utils import MISSING, _assetbytes_to_base64_data, parse_time
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     import datetime
 
     from .asset import AssetBytes
+    from .member import Member
     from .state import ConnectionState
     from .types.template import Template as TemplatePayload
     from .user import User
@@ -49,7 +50,7 @@ class _FriendlyHttpAttributeErrorHelper:
 
 
 class _PartialTemplateState:
-    def __init__(self, *, state):
+    def __init__(self, *, state: ConnectionState):
         self.__state = state
         self.http = _FriendlyHttpAttributeErrorHelper()
 
@@ -81,7 +82,7 @@ class _PartialTemplateState:
     def _get_guild(self, id):
         return self.__state._get_guild(id)
 
-    async def query_members(self, **kwargs: Any):
+    async def query_members(self, **kwargs: Any) -> List[Member]:
         return []
 
     def __getattr__(self, attr):

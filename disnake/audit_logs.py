@@ -134,8 +134,8 @@ def _transform_guild_id(entry: AuditLogEntry, data: Optional[Snowflake]) -> Opti
 
 def _transform_overwrites(
     entry: AuditLogEntry, data: List[PermissionOverwritePayload]
-) -> List[Tuple[Object, PermissionOverwrite]]:
-    overwrites = []
+) -> List[Tuple[abc.Snowflake, PermissionOverwrite]]:
+    overwrites: List[Tuple[abc.Snowflake, PermissionOverwrite]] = []
     for elem in data:
         allow = Permissions(int(elem["allow"]))
         deny = Permissions(int(elem["deny"]))

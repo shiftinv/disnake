@@ -110,7 +110,7 @@ reportUnknownMemberType = false
 reportUnknownParameterType = false
 reportUnknownArgumentType = false
 reportMissingParameterType = false
-reportUnknownVariableType = false
+# reportUnknownVariableType = false
 strictParameterNoneValue = false
 
 

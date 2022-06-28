@@ -1040,7 +1040,7 @@ class VocalGuildChannel(disnake.abc.Connectable, disnake.abc.GuildChannel, Hasha
     @property
     def members(self) -> List[Member]:
         """List[:class:`Member`]: Returns all members that are currently inside this voice channel."""
-        ret = []
+        ret: List[Member] = []
         for user_id, state in self.guild._voice_states.items():
             if state.channel and state.channel.id == self.id:
                 member = self.guild.get_member(user_id)
@@ -2305,7 +2305,7 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
         These are sorted by the official Discord UI, which places voice channels below the text channels.
         """
 
-        def comparator(channel):
+        def comparator(channel: GuildChannelType):
             return (not isinstance(channel, (TextChannel, ForumChannel)), channel.position)
 
         ret = [c for c in self.guild.channels if c.category_id == self.id]
@@ -3171,7 +3171,7 @@ class DMChannel(disnake.abc.Messageable, Hashable):
 
     def __init__(self, *, me: ClientUser, state: ConnectionState, data: DMChannelPayload):
         self._state: ConnectionState = state
-        self.recipient: Optional[User] = state.store_user(data["recipients"][0])  # type: ignore
+        self.recipient: Optional[User] = state.store_user(data["recipients"][0])
         self.me: ClientUser = me
         self.id: int = int(data["id"])
         self.last_pin_timestamp: Optional[datetime.datetime] = utils.parse_time(

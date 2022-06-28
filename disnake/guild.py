@@ -603,7 +603,7 @@ class Guild(Hashable):
         except KeyError:
             pass
 
-        empty_tuple = ()
+        empty_tuple: Tuple[()] = ()
         for presence in data.get("presences", []):
             user_id = int(presence["user"]["id"])
             member = self.get_member(user_id)
@@ -2784,7 +2784,7 @@ class Guild(Hashable):
             The list of invites that are currently active.
         """
         data = await self._state.http.invites_from(self.id)
-        result = []
+        result: List[Invite] = []
         for invite in data:
             channel = self.get_channel(int(invite["channel"]["id"]))
             result.append(Invite(state=self._state, data=invite, guild=self, channel=channel))
@@ -3936,7 +3936,7 @@ class Guild(Hashable):
         *,
         limit: int = 1,
         cache: bool = True,
-    ):
+    ) -> List[Member]:
         """|coro|
 
         Retrieves members that belong to this guild whose username or nickname starts with
@@ -3975,7 +3975,7 @@ class Guild(Hashable):
             raise ValueError("limit must be at least 1")
         limit = min(1000, limit)
         members = await self._state.http.search_guild_members(self.id, query=query, limit=limit)
-        resp = []
+        resp: List[Member] = []
         for member in members:
             member = Member(state=self._state, data=member, guild=self)
             if cache and member.id not in self._members:

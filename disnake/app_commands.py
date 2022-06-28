@@ -138,7 +138,7 @@ class OptionChoice:
     def __repr__(self) -> str:
         return f"<OptionChoice name={self.name!r} value={self.value!r}>"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: OptionChoice) -> bool:
         return (
             self.name == other.name
             and self.value == other.value
@@ -309,7 +309,7 @@ class Option:
             f" min_length={self.min_length!r} max_length={self.max_length!r}>"
         )
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Option) -> bool:
         return (
             self.name == other.name
             and self.description == other.description
@@ -546,7 +546,7 @@ class ApplicationCommand(ABC):
     def __str__(self) -> str:
         return self.name
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: ApplicationCommand) -> bool:
         return (
             self.type == other.type
             and self.name == other.name
@@ -860,7 +860,7 @@ class SlashCommand(ApplicationCommand):
 
         self.options: List[Option] = options or []
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: SlashCommand) -> bool:
         return (
             super().__eq__(other)
             and self.description == other.description
@@ -1015,7 +1015,7 @@ class ApplicationCommandPermissions:
     def __repr__(self):
         return f"<ApplicationCommandPermissions id={self.id!r} type={self.type!r} permission={self.permission!r}>"
 
-    def __eq__(self, other):
+    def __eq__(self, other: ApplicationCommandPermissions):
         return (
             self.id == other.id and self.type == other.type and self.permission == other.permission
         )

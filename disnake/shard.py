@@ -44,6 +44,7 @@ from .errors import (
 )
 from .gateway import DiscordWebSocket, ReconnectWebSocket
 from .state import AutoShardedConnectionState
+from .utils import MISSING
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -347,17 +348,18 @@ class AutoShardedClient(Client):
 
         # instead of a single websocket, we have multiple
         # the key is the shard_id
-        self.__shards = {}
+        self.__shards: Dict[int, Shard] = {}
         self._connection._get_websocket = self._get_websocket
         self._connection._get_client = lambda: self
-        self.__queue = asyncio.PriorityQueue()
+        self.__queue: asyncio.PriorityQueue[EventItem] = asyncio.PriorityQueue()
 
     def _get_websocket(
-        self, guild_id: Optional[int] = None, *, shard_id: Optional[int] = None
+        self, guild_id: int = MISSING, *, shard_id: Optional[int] = None
     ) -> DiscordWebSocket:
         if shard_id is None:
-            # guild_id won't be None if shard_id is None and shard_count won't be None here
-            shard_id = (guild_id >> 22) % self.shard_count  # type: ignore
+            # guild_id won't be missing if shard_id is None and shard_count won't be None here
+            shard_count: int = self.shard_count  # type: ignore
+            shard_id = (guild_id >> 22) % shard_count
         return self.__shards[shard_id].ws
 
     def _get_state(self, **options: Any) -> AutoShardedConnectionState:
@@ -455,7 +457,7 @@ class AutoShardedClient(Client):
         await self.launch_shards(ignore_session_start_limit=ignore_session_start_limit)
 
         while not self.is_closed():
-            item = await self.__queue.get()
+            item: Any = await self.__queue.get()
             if item.type == EventType.close:
                 await self.close()
                 if isinstance(item.error, ConnectionClosed):

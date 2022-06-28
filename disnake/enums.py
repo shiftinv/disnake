@@ -25,7 +25,18 @@ DEALINGS IN THE SOFTWARE.
 
 import types
 from functools import total_ordering
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, NamedTuple, Optional, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 __all__ = (
     "Enum",
@@ -111,10 +122,17 @@ class EnumMeta(type):
         _enum_member_map_: ClassVar[Dict[str, Any]]
         _enum_value_map_: ClassVar[Dict[Any, Any]]
 
-    def __new__(cls, name, bases, attrs, *, comparable: bool = False):
-        value_mapping = {}
-        member_mapping = {}
-        member_names = []
+    def __new__(
+        cls,
+        name: str,
+        bases: Tuple[Type[Any], ...],
+        attrs: Dict[str, Any],
+        *,
+        comparable: bool = False,
+    ):
+        value_mapping: Dict[Any, _EnumValueBase] = {}
+        member_mapping: Dict[str, _EnumValueBase] = {}
+        member_names: List[str] = []
 
         value_cls = _create_value_cls(name, comparable)
         for key, value in list(attrs.items()):
@@ -811,7 +829,7 @@ T = TypeVar("T")
 
 
 def create_unknown_value(cls: Type[T], val: Any) -> T:
-    value_cls = cls._enum_value_cls_  # type: ignore
+    value_cls: Type[Any] = cls._enum_value_cls_  # type: ignore
     name = f"unknown_{val}"
     return value_cls(name=name, value=val)
 

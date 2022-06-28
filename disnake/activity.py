@@ -233,14 +233,14 @@ class Activity(BaseActivity):
         self.session_id: Optional[str] = kwargs.pop("session_id", None)
         self.buttons: List[ActivityButton] = kwargs.pop("buttons", [])
 
-        activity_type = kwargs.pop("type", -1)
+        activity_type: Union[ActivityType, int] = kwargs.pop("type", -1)
         self.type: ActivityType = (
             activity_type
             if isinstance(activity_type, ActivityType)
             else try_enum(ActivityType, activity_type)
         )
 
-        emoji = kwargs.pop("emoji", None)
+        emoji: Optional[ActivityEmojiPayload] = kwargs.pop("emoji", None)
         self.emoji: Optional[PartialEmoji] = (
             PartialEmoji.from_dict(emoji) if emoji is not None else None
         )

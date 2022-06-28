@@ -644,7 +644,7 @@ class Client:
 
         listeners = self._listeners.get(event)
         if listeners:
-            removed = []
+            removed: List[int] = []
             for i, (future, condition) in enumerate(listeners):
                 if future.cancelled():
                     removed.append(i)
@@ -1465,11 +1465,7 @@ class Client:
         """
         future = self.loop.create_future()
         if check is None:
-
-            def _check(*args):
-                return True
-
-            check = _check
+            check = lambda *args: True
 
         ev = event.lower()
         try:

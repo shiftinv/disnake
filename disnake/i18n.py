@@ -261,7 +261,7 @@ class LocalizationValue:
             return None
         return self._data
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: LocalizationValue) -> bool:
         d1 = self.data
         d2 = other.data
         # consider values equal if they're both falsy, or actually equal

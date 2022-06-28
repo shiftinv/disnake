@@ -23,6 +23,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+# TODO: remove once state typings added
+# pyright: reportUnknownVariableType=false
+
 from __future__ import annotations
 
 import asyncio
@@ -124,7 +127,7 @@ if TYPE_CHECKING:
         TypingEvent,
     )
     from .types.sticker import GuildSticker as GuildStickerPayload
-    from .types.user import User as UserPayload
+    from .types.user import PartialUser as PartialUserPayload, User as UserPayload
     from .types.webhook import Webhook as WebhookPayload
     from .voice_client import VoiceProtocol
 
@@ -338,7 +341,7 @@ class ConnectionState:
     def process_chunk_requests(
         self, guild_id: int, nonce: Optional[str], members: List[Member], complete: bool
     ) -> None:
-        removed = []
+        removed: List[Union[int, str]] = []
         for key, request in self._chunk_requests.items():
             if request.guild_id == guild_id and request.nonce == nonce:
                 request.add_members(members)
@@ -394,7 +397,7 @@ class ConnectionState:
         for vc in self.voice_clients:
             vc.main_ws = ws  # type: ignore
 
-    def store_user(self, data: UserPayload) -> User:
+    def store_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         user_id = int(data["id"])
         try:
             return self._users[user_id]
@@ -408,7 +411,7 @@ class ConnectionState:
     def deref_user(self, user_id: int) -> None:
         self._users.pop(user_id, None)
 
-    def create_user(self, data: UserPayload) -> User:
+    def create_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         return User(state=self, data=data)
 
     def deref_user_no_intents(self, user_id: int) -> None:
@@ -687,7 +690,7 @@ class ConnectionState:
 
     async def _delay_ready(self) -> None:
         try:
-            states = []
+            states: List[Tuple[Guild, asyncio.Future[List[Member]]]] = []
             while True:
                 # this snippet of code is basically waiting N seconds
                 # until the last GUILD_CREATE was sent

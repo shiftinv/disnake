@@ -23,6 +23,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+# NOTE: disabled since refactor in progress anyway
+# pyright: reportUnknownVariableType=false
+
 from __future__ import annotations
 
 import asyncio

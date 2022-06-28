@@ -39,6 +39,8 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
+    TypeVar,
     Union,
     cast,
     overload,
@@ -86,6 +88,9 @@ if TYPE_CHECKING:
     )
 
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
+
+
+T = TypeVar("T", bound=Type["Member"])
 
 
 class VoiceState:
@@ -185,7 +190,7 @@ class VoiceState:
         return f"<{self.__class__.__name__} {inner}>"
 
 
-def flatten_user(cls):
+def flatten_user(cls: T) -> T:
     for attr, value in itertools.chain(BaseUser.__dict__.items(), User.__dict__.items()):
         # ignore private/special methods
         if attr.startswith("_"):
@@ -205,16 +210,16 @@ def flatten_user(cls):
             # However I'm not sure how I feel about "functions" returning properties
             # It probably breaks something in Sphinx.
             # probably a member function by now
-            def generate_function(x):
+            def generate_function(x: str):
                 # We want sphinx to properly show coroutine functions as coroutines
                 if asyncio.iscoroutinefunction(value):  # noqa: B023
 
-                    async def general(self, *args, **kwargs):  # type: ignore
+                    async def general(self: Member, *args: Any, **kwargs: Any):  # type: ignore
                         return await getattr(self._user, x)(*args, **kwargs)
 
                 else:
 
-                    def general(self, *args, **kwargs):
+                    def general(self: Member, *args: Any, **kwargs: Any):
                         return getattr(self._user, x)(*args, **kwargs)
 
                 general.__name__ = x
@@ -563,7 +568,7 @@ class Member(disnake.abc.Messageable, _UserTag):
 
         These roles are sorted by their position in the role hierarchy.
         """
-        result = []
+        result: List[Role] = []
         g = self.guild
         for role_id in self._roles:
             role = g.get_role(role_id)

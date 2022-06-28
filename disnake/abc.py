@@ -457,7 +457,7 @@ class GuildChannel(ABC):
     def changed_roles(self) -> List[Role]:
         """List[:class:`.Role`]: Returns a list of roles that have been overridden from
         their default values in the :attr:`.Guild.roles` attribute."""
-        ret = []
+        ret: List[Role] = []
         g = self.guild
         for overwrite in filter(lambda o: o.is_role(), self._overwrites):
             role = g.get_role(overwrite.id)
@@ -522,7 +522,7 @@ class GuildChannel(ABC):
         Dict[Union[:class:`~disnake.Role`, :class:`~disnake.Member`], :class:`~disnake.PermissionOverwrite`]
             The channel's permission overwrites.
         """
-        ret = {}
+        ret: Dict[Union[Role, Member], PermissionOverwrite] = {}
         for ow in self._overwrites:
             allow = Permissions(ow.allow)
             deny = Permissions(ow.deny)
@@ -1071,22 +1071,25 @@ class GuildChannel(ABC):
         if not kwargs:
             return
 
-        beginning, end = kwargs.get("beginning"), kwargs.get("end")
-        before, after = kwargs.get("before"), kwargs.get("after")
-        offset = kwargs.get("offset", 0)
+        beginning: Optional[int] = kwargs.get("beginning")
+        end: Optional[int] = kwargs.get("end")
+        before: Optional[Snowflake] = kwargs.get("before")
+        after: Optional[Snowflake] = kwargs.get("after")
+        offset: int = kwargs.get("offset", 0)
         if sum(bool(a) for a in (beginning, end, before, after)) > 1:
             raise TypeError("Only one of [before, after, end, beginning] can be used.")
 
         bucket = self._sorting_bucket
-        parent_id = kwargs.get("category", MISSING)
-        if parent_id not in (MISSING, None):
-            parent_id = parent_id.id
+        parent: Optional[Snowflake] = kwargs.get("category", MISSING)
+        if parent is not None and parent is not MISSING:
+            parent_id = parent.id
             channels = [
                 ch
                 for ch in self.guild.channels
                 if ch._sorting_bucket == bucket and ch.category_id == parent_id
             ]
         else:
+            parent_id = parent
             channels = [
                 ch
                 for ch in self.guild.channels
@@ -1118,10 +1121,10 @@ class GuildChannel(ABC):
 
         channels.insert(max((index + offset), 0), self)
         payload = []
-        lock_permissions = kwargs.get("sync_permissions", False)
-        reason = kwargs.get("reason")
+        lock_permissions: bool = kwargs.get("sync_permissions", False)
+        reason: Optional[str] = kwargs.get("reason")
         for index, channel in enumerate(channels):
-            d = {"id": channel.id, "position": index}
+            d: Dict[str, Any] = {"id": channel.id, "position": index}
             if parent_id is not MISSING and channel.id == self.id:
                 d.update(parent_id=parent_id, lock_permissions=lock_permissions)
             payload.append(d)

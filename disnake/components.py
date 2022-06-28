@@ -109,7 +109,7 @@ class Component:
         return f"<{self.__class__.__name__} {attrs}>"
 
     @classmethod
-    def _raw_construct(cls, **kwargs) -> Self:
+    def _raw_construct(cls, **kwargs: Any) -> Self:
         self = cls.__new__(cls)
         for slot in get_slots(cls):
             try:

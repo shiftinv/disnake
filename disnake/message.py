@@ -39,6 +39,8 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Type,
+    TypeVar,
     Union,
     cast,
     overload,
@@ -95,6 +97,10 @@ if TYPE_CHECKING:
 
     EmojiInputType = Union[Emoji, PartialEmoji, str]
 
+
+T = TypeVar("T", bound=Type["Message"])
+
+
 __all__ = (
     "Attachment",
     "Message",
@@ -105,7 +111,7 @@ __all__ = (
 )
 
 
-def convert_emoji_reaction(emoji):
+def convert_emoji_reaction(emoji: Union[EmojiInputType, Reaction]) -> str:
     if isinstance(emoji, Reaction):
         emoji = emoji.emoji
 
@@ -689,7 +695,7 @@ class InteractionReference:
         return self.user
 
 
-def flatten_handlers(cls):
+def flatten_handlers(cls: T) -> T:
     prefix = len("_handle_")
     handlers = [
         (key[prefix:], value)
@@ -967,9 +973,9 @@ class Message(Hashable):
         name = self.__class__.__name__
         return f"<{name} id={self.id} channel={self.channel!r} type={self.type!r} author={self.author!r} flags={self.flags!r}>"
 
-    def _try_patch(self, data, key, transform=None) -> None:
+    def _try_patch(self, data: MessagePayload, key: str, transform=None) -> None:
         try:
-            value = data[key]
+            value: Any = data[key]
         except KeyError:
             pass
         else:
@@ -1039,7 +1045,7 @@ class Message(Hashable):
         # handler rather than iterating over the keys which is a little slower
         for key, handler in self._HANDLERS:
             try:
-                value = data[key]
+                value: Any = data[key]
             except KeyError:
                 continue
             else:
@@ -1912,7 +1918,7 @@ class Message(Hashable):
         return Thread(guild=self.guild, state=self._state, data=data)
 
     async def reply(
-        self, content: Optional[str] = None, *, fail_if_not_exists: bool = True, **kwargs
+        self, content: Optional[str] = None, *, fail_if_not_exists: bool = True, **kwargs: Any
     ) -> Message:
         """|coro|
 

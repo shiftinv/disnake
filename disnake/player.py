@@ -35,7 +35,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import IO, TYPE_CHECKING, Any, Callable, Generic, Optional, Tuple, TypeVar, Union
+from typing import IO, TYPE_CHECKING, Any, Callable, Dict, Generic, Optional, Tuple, TypeVar, Union
 
 from . import utils
 from .errors import ClientException
@@ -390,9 +390,8 @@ class FFmpegOpusAudio(FFmpegAudio):
         before_options=None,
         options=None,
     ) -> None:
-
         args = []
-        subprocess_kwargs = {
+        subprocess_kwargs: Dict[str, Any] = {
             "stdin": subprocess.PIPE if pipe else subprocess.DEVNULL,
             "stderr": stderr,
         }
@@ -583,7 +582,7 @@ class FFmpegOpusAudio(FFmpegAudio):
 
     @staticmethod
     def _probe_codec_native(
-        source, executable: str = "ffmpeg"
+        source: str, executable: str = "ffmpeg"
     ) -> Tuple[Optional[str], Optional[int]]:
         exe = executable[:2] + "probe" if executable in ("ffmpeg", "avconv") else executable
         args = [
@@ -612,7 +611,7 @@ class FFmpegOpusAudio(FFmpegAudio):
 
     @staticmethod
     def _probe_codec_fallback(
-        source, executable: str = "ffmpeg"
+        source: str, executable: str = "ffmpeg"
     ) -> Tuple[Optional[str], Optional[int]]:
         args = [executable, "-hide_banner", "-i", source]
         proc = subprocess.Popen(

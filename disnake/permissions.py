@@ -26,7 +26,19 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, Optional, Set, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterator,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 from .flags import BaseFlags, alias_flag_value, flag_value
 
@@ -55,11 +67,14 @@ def make_permission_alias(alias: str) -> Callable[[Callable[[Any], int]], permis
     return decorator
 
 
-def cached_creation(func):
+P = TypeVar("P", bound="Permissions")
+
+
+def cached_creation(func: Callable[[Type[P]], P]) -> Callable[[Type[P]], P]:
     @wraps(func)
-    def wrapped(cls):
+    def wrapped(cls: Type[P]) -> P:
         try:
-            value = func.__stored_value__
+            value: int = func.__stored_value__
         except AttributeError:
             value = func(cls).value
             func.__stored_value__ = value
@@ -770,9 +785,9 @@ class Permissions(BaseFlags):
         return 1 << 40
 
 
-def _augment_from_permissions(cls):
+def _augment_from_permissions(cls: Type[PermissionOverwrite]) -> Type[PermissionOverwrite]:
     cls.VALID_NAMES = set(Permissions.VALID_FLAGS)
-    aliases = set()
+    aliases: Set[str] = set()
 
     # make descriptors for all the valid names and aliases
     for name, value in Permissions.__dict__.items():
@@ -785,10 +800,10 @@ def _augment_from_permissions(cls):
             continue
 
         # god bless Python
-        def getter(self, x=key):
+        def getter(self: PermissionOverwrite, x=key):
             return self._values.get(x)
 
-        def setter(self, value, x=key):
+        def setter(self: PermissionOverwrite, value, x=key):
             self._set(x, value)
 
         prop = property(getter, setter)

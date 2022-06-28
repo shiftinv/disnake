@@ -170,11 +170,15 @@ class DMChannel(_BaseChannel):
     recipients: List[PartialUser]
 
 
-class GroupDMChannel(_BaseChannel):
+class _GroupDMChannelOptional(_BaseChannel, total=False):
     name: Optional[str]
-    type: Literal[3]
     icon: Optional[str]
     owner_id: Snowflake
+    recipients: List[PartialUser]
+
+
+class GroupDMChannel(_GroupDMChannelOptional):
+    type: Literal[3]
 
 
 Channel = Union[GuildChannel, DMChannel, GroupDMChannel]
