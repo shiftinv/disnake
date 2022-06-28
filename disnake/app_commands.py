@@ -58,8 +58,12 @@ if TYPE_CHECKING:
 
     Choices = Union[
         List["OptionChoice"],
-        List[ApplicationCommandOptionChoiceValue],
-        Dict[str, ApplicationCommandOptionChoiceValue],
+        List[str],
+        List[int],
+        List[float],
+        Dict[str, str],
+        Dict[str, int],
+        Dict[str, float],
         List[Localized[str]],
     ]
 
