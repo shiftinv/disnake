@@ -103,7 +103,7 @@ if TYPE_CHECKING:
     T = TypeVar("T")
     Response = Coroutine[Any, Any, T]
 
-_API_VERSION = 10
+_API_VERSION = 42
 
 
 def _workaround_set_api_version(version: Literal[9, 10]):
