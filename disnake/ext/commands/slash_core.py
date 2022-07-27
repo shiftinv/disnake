@@ -122,36 +122,33 @@ async def _call_autocompleter(
 class SubCommandGroup(InvokableApplicationCommand):
     """A class that implements the protocol for a bot slash command group.
 
-    These are not created manually, instead they are created via the
-    decorator or functional interface.
+     These are not created manually, instead they are created via the
+     decorator or functional interface.
 
-    Attributes
-    ----------
-    name: :class:`str`
-        The name of the group.
-    qualified_name: :class:`str`
-        The full command name, including parent names in the case of slash subcommands or groups.
-        For example, the qualified name for ``/one two three`` would be ``one two three``.
+     Attributes
+     ----------
+     name: :class:`str`
+         The name of the group.
     option: :class:`.Option`
-        API representation of this subcommand.
-    callback: :ref:`coroutine <coroutine>`
-        The coroutine that is executed when the command group is invoked.
-    cog: Optional[:class:`Cog`]
-        The cog that this group belongs to. ``None`` if there isn't one.
-    checks: List[Callable[[:class:`.ApplicationCommandInteraction`], :class:`bool`]]
-        A list of predicates that verifies if the group could be executed
-        with the given :class:`.ApplicationCommandInteraction` as the sole parameter. If an exception
-        is necessary to be thrown to signal failure, then one inherited from
-        :exc:`.CommandError` should be used. Note that if the checks fail then
-        :exc:`.CheckFailure` exception is raised to the :func:`.on_slash_command_error`
-        event.
-    extras: Dict[:class:`str`, Any]
-        A dict of user provided extras to attach to the subcommand group.
+         API representation of this subcommand.
+     callback: :ref:`coroutine <coroutine>`
+         The coroutine that is executed when the command group is invoked.
+     cog: Optional[:class:`Cog`]
+         The cog that this group belongs to. ``None`` if there isn't one.
+     checks: List[Callable[[:class:`.ApplicationCommandInteraction`], :class:`bool`]]
+         A list of predicates that verifies if the group could be executed
+         with the given :class:`.ApplicationCommandInteraction` as the sole parameter. If an exception
+         is necessary to be thrown to signal failure, then one inherited from
+         :exc:`.CommandError` should be used. Note that if the checks fail then
+         :exc:`.CheckFailure` exception is raised to the :func:`.on_slash_command_error`
+         event.
+     extras: Dict[:class:`str`, Any]
+         A dict of user provided extras to attach to the subcommand group.
 
-        .. note::
-            This object may be copied by the library.
+         .. note::
+             This object may be copied by the library.
 
-        .. versionadded:: 2.5
+         .. versionadded:: 2.5
     """
 
     def __init__(
@@ -188,12 +185,19 @@ class SubCommandGroup(InvokableApplicationCommand):
 
     @property
     def qualified_name(self) -> str:
+        """:class:`str`: The full command name, including parent names in the case of slash subcommands or groups.
+        For example, the qualified name for ``/one two three`` would be ``one two three``.
+        """
         if not self._parent:
             return self.name
         return f"{self._parent.qualified_name} {self.name}"
 
     @property
     def parent(self) -> Optional[InvokableSlashCommand]:
+        """Optional[:class:`InvokableSlashCommand`] The parent of this SubCommandGroup.
+
+        .. versionadded:: 2.6
+        """
         return self._parent
 
     def sub_command(
@@ -236,41 +240,35 @@ class SubCommandGroup(InvokableApplicationCommand):
 class SubCommand(InvokableApplicationCommand):
     """A class that implements the protocol for a bot slash subcommand.
 
-    These are not created manually, instead they are created via the
-    decorator or functional interface.
+     These are not created manually, instead they are created via the
+     decorator or functional interface.
 
-    Attributes
-    ----------
-    name: :class:`str`
-        The name of the subcommand.
-    qualified_name: :class:`str`
-        The full command name, including parent names in the case of slash subcommands or groups.
-        For example, the qualified name for ``/one two three`` would be ``one two three``.
+     Attributes
+     ----------
+     name: :class:`str`
+         The name of the subcommand.
     option: :class:`.Option`
-        API representation of this subcommand.
-    callback: :ref:`coroutine <coroutine>`
-        The coroutine that is executed when the subcommand is called.
-    cog: Optional[:class:`Cog`]
-        The cog that this subcommand belongs to. ``None`` if there isn't one.
-    checks: List[Callable[[:class:`.ApplicationCommandInteraction`], :class:`bool`]]
-        A list of predicates that verifies if the subcommand could be executed
-        with the given :class:`.ApplicationCommandInteraction` as the sole parameter. If an exception
-        is necessary to be thrown to signal failure, then one inherited from
-        :exc:`.CommandError` should be used. Note that if the checks fail then
-        :exc:`.CheckFailure` exception is raised to the :func:`.on_slash_command_error`
-        event.
-    connectors: Dict[:class:`str`, :class:`str`]
-        A mapping of option names to function parameter names, mainly for internal processes.
-    extras: Dict[:class:`str`, Any]
-        A dict of user provided extras to attach to the subcommand.
+         API representation of this subcommand.
+     callback: :ref:`coroutine <coroutine>`
+         The coroutine that is executed when the subcommand is called.
+     cog: Optional[:class:`Cog`]
+         The cog that this subcommand belongs to. ``None`` if there isn't one.
+     checks: List[Callable[[:class:`.ApplicationCommandInteraction`], :class:`bool`]]
+         A list of predicates that verifies if the subcommand could be executed
+         with the given :class:`.ApplicationCommandInteraction` as the sole parameter. If an exception
+         is necessary to be thrown to signal failure, then one inherited from
+         :exc:`.CommandError` should be used. Note that if the checks fail then
+         :exc:`.CheckFailure` exception is raised to the :func:`.on_slash_command_error`
+         event.
+     connectors: Dict[:class:`str`, :class:`str`]
+         A mapping of option names to function parameter names, mainly for internal processes.
+     extras: Dict[:class:`str`, Any]
+         A dict of user provided extras to attach to the subcommand.
 
-        .. note::
-            This object may be copied by the library.
+         .. note::
+             This object may be copied by the library.
 
-        .. versionadded:: 2.5
-    parent: ...
-
-        .. versionadded:: 2.6
+         .. versionadded:: 2.5
     """
 
     def __init__(
@@ -324,12 +322,20 @@ class SubCommand(InvokableApplicationCommand):
 
     @property
     def qualified_name(self) -> str:
+        """:class:`str`: The full command name, including parent names in the case of slash subcommands or groups.
+        For example, the qualified name for ``/one two three`` would be ``one two three``.
+        """
         if not self._parent:
             return self.name
         return f"{self._parent.qualified_name} {self.name}"
 
     @property
     def parent(self) -> Optional[Union[InvokableSlashCommand, SubCommandGroup]]:
+        """Optional[Union[:class:`InvokableSlashCommand`, :class:`SubCommandGroup`]]: The parent of this subcommand.
+
+        .. versionadded:: 2.6
+        """
+        # todo: figure out when this can be optional or not, and try to make it non-optional for user-experience
         return self._parent
 
     async def _call_autocompleter(
@@ -382,9 +388,6 @@ class InvokableSlashCommand(InvokableApplicationCommand, SlashCommand):
     ----------
     name: :class:`str`
         The name of the command.
-    qualified_name: :class:`str`
-        The full command name, including parent names in the case of slash subcommands or groups.
-        For example, the qualified name for ``/one two three`` would be ``one two three``.
     body: :class:`.SlashCommand`
         An object being registered in the API.
     callback: :ref:`coroutine <coroutine>`

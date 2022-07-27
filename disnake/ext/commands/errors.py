@@ -1037,6 +1037,8 @@ class CommandRegistrationError(ClientException):
         The command name that had the error.
     alias_conflict: :class:`bool`
         Whether the name that conflicts is an alias of the command we try to add.
+    guild_id: Optional[:class:`int`]
+        The specific guild ID this command conflicts with, if any.
     """
 
     def __init__(self, name: str, *, alias_conflict: bool = False, guild_id: int = None) -> None:

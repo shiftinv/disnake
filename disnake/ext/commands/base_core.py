@@ -231,11 +231,11 @@ class InvokableApplicationCommand(ABC):
 
     @property
     def id(self) -> Optional[int]:
-        return self.body.id
+        """Optional[:class:`int`]: The ID of this command, if it is synced with Discord.
 
-    @id.setter
-    def id(self, id: int):
-        self.body.id = id
+        .. versionadded:: 2.6
+        """
+        return self.body.id
 
     @property
     def dm_permission(self) -> bool:
@@ -244,6 +244,9 @@ class InvokableApplicationCommand(ABC):
 
     @property
     def qualified_name(self) -> str:
+        """:class:`str`: The full command name, including parent names in the case of slash subcommands or groups.
+        For example, the qualified name for ``/one two three`` would be ``one two three``.
+        """
         return self.name
 
     @property

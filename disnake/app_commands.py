@@ -474,6 +474,10 @@ class ApplicationCommand(ABC):
         Defaults to ``False``.
 
         .. versionadded:: 2.6
+    id: Optional[:class:`int]
+        The ID of the command, if there is a representation on Discord.
+
+        .. versionadded:: 2.6
     """
 
     __repr_info__: ClassVar[Tuple[str, ...]] = (
@@ -628,6 +632,11 @@ class UserCommand(ApplicationCommand):
         Defaults to ``False``.
 
         .. versionadded:: 2.6
+
+    id: Optional[:class:`int]
+        The ID of the command, if there is a representation on Discord.
+
+        .. versionadded:: 2.6
     """
 
     __repr_info__ = ("name", "dm_permission", "default_member_permissions")
@@ -728,6 +737,11 @@ class MessageCommand(ApplicationCommand):
     nsfw: :class:`bool`
         Whether this command can only be used in NSFW channels.
         Defaults to ``False``.
+
+        .. versionadded:: 2.6
+
+    id: Optional[:class:`int]
+        The ID of the command, if there is a representation on Discord.
 
         .. versionadded:: 2.6
     """
@@ -842,6 +856,11 @@ class SlashCommand(ApplicationCommand):
 
     options: List[:class:`Option`]
         The list of options the slash command has.
+
+    id: Optional[:class:`int]
+        The ID of the command, if there is a representation on Discord.
+
+        .. versionadded:: 2.6
     """
 
     __repr_info__ = (

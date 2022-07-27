@@ -132,11 +132,10 @@ class InvokableUserCommand(InvokableApplicationCommand, UserCommand):
 
     @property
     def type(self) -> Literal[ApplicationCommandType.user]:
-        return ApplicationCommandType.user
+        """:class:`ApplicationCommandType`: The type of this command.
 
-    @property
-    def qualified_name(self) -> str:
-        return self.name
+        Always returns :attr:`ApplicationCommandType.user`."""
+        return ApplicationCommandType.user
 
     @property
     def name_localizations(self) -> LocalizationValue:
@@ -249,11 +248,10 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
 
     @property
     def type(self) -> Literal[ApplicationCommandType.message]:
-        return ApplicationCommandType.message
+        """:class:`ApplicationCommandType`: The type of this command.
 
-    @property
-    def qualified_name(self) -> str:
-        return self.name
+        Always returns :attr:`ApplicationCommandType.message`."""
+        return ApplicationCommandType.message
 
     @property
     def name_localizations(self) -> LocalizationValue:

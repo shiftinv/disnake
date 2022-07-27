@@ -201,19 +201,10 @@ class InteractionBotBase(CommonBotBase):
 
         self._schedule_app_command_preparation()
 
-    def application_commands_iterator(self) -> Iterable[InvokableApplicationCommand]:
-        return chain(
-            self._all_app_commands.values(),
-        )
-
-    @property
-    def all_app_commands(self) -> List[InvokableApplicationCommand]:
-        return list(self._all_app_commands.values())
-
     @property
     def application_commands(self) -> Set[InvokableApplicationCommand]:
         """Set[:class:`InvokableApplicationCommand`]: A set of all application commands the bot has."""
-        return set(self.application_commands_iterator())
+        return set(self._all_app_commands.values())
 
     @property
     def slash_commands(self) -> Set[InvokableSlashCommand]:
@@ -404,6 +395,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the slash command to remove.
+        guild_id: :class:`int`
+            The guild to remove the command from, if any.
+
+            .. versionadded:: 2.6
 
         Returns
         -------
@@ -433,6 +428,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the user command to remove.
+        guild_id: :class:`int`
+            The guild to remove the command from, if any.
+
+            .. versionadded:: 2.6
 
         Returns
         -------
@@ -455,6 +454,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the message command to remove.
+        guild_id: :class:`int`
+            The guild to remove the command from, if any.
+
+            .. versionadded:: 2.6
 
         Returns
         -------
@@ -488,6 +491,7 @@ class InteractionBotBase(CommonBotBase):
     def get_app_command(
         self, name: str, type: ApplicationCommandType, *, guild_id: int = None
     ) -> Optional[InvokableApplicationCommand]:
+        # todo: document this method?
         # this does not get commands by ID, use (some other method) to do that
         if not isinstance(name, str):
             raise TypeError(f"Expected name to be str, not {name.__class__}")
@@ -510,6 +514,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the slash command to get.
+        guild_id: :class:`int`
+            The guild_id to get the command from, if any.
+
+            .. versionadded:: 2.6
 
         Raises
         ------
@@ -548,6 +556,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the user command to get.
+        guild_id: :class:`int`
+            The guild_id to get the command from, if any.
+
+            .. versionadded:: 2.6
 
         Returns
         -------
@@ -566,6 +578,10 @@ class InteractionBotBase(CommonBotBase):
         ----------
         name: :class:`str`
             The name of the message command to get.
+        guild_id: :class:`int`
+            The guild_id to get the command from, if any.
+
+            .. versionadded:: 2.6
 
         Returns
         -------
@@ -830,7 +846,7 @@ class InteractionBotBase(CommonBotBase):
         global_cmds = []
         guilds = {}
 
-        for cmd in self.application_commands_iterator():
+        for cmd in self._all_app_commands.values():
             if not cmd.auto_sync:
                 cmd.body._always_synced = True
 
@@ -870,7 +886,7 @@ class InteractionBotBase(CommonBotBase):
         except (disnake.HTTPException, TypeError):
             pass
         else:
-            for command in self.application_commands_iterator():
+            for command in self._all_app_commands.values():
                 if command.body.id is not None and command.body.id not in global_commands:
                     command.body.id = None
 
