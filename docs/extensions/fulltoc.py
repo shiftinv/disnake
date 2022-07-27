@@ -106,7 +106,8 @@ def build_full_toctree(builder: StandaloneHTMLBuilder, docname: str, index: str,
     for toctree in toctrees[1:]:
         result.extend(toctree.children)
     # env.resolve_references(result, docname, builder)
-    return result
+    ul = nodes.bullet_list("", result)
+    return ul
 
 
 def setup(app: Sphinx):

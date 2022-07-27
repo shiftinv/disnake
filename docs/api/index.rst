@@ -15,13 +15,17 @@ The following section outlines the API of disnake.
 
 .. toctree::
     :name: api_toc
-    :hidden:
-    :maxdepth: 2
+    :maxdepth: 3
     :glob:
 
-    self
-    *
+    ./index.rst
 
+.. toctree::
+    :name: huh
+    :maxdepth: 3
+    :glob:
+
+    *
 
 Version Related Info
 ---------------------
