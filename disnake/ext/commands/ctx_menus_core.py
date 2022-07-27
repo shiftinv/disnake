@@ -99,6 +99,7 @@ class InvokableUserCommand(InvokableApplicationCommand, UserCommand):
         nsfw: bool = None,
         guild_ids: Sequence[int] = None,
         auto_sync: bool = None,
+        id: Optional[int] = None,
         **kwargs,
     ):
         name_loc = Localized._cast(name, False)
@@ -124,6 +125,7 @@ class InvokableUserCommand(InvokableApplicationCommand, UserCommand):
             dm_permission=dm_permission and not self._guild_only,
             default_member_permissions=default_member_permissions,
             nsfw=nsfw,
+            id=id,
         )
 
         self._name_localised = name_loc
@@ -215,6 +217,7 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
         nsfw: bool = None,
         guild_ids: Sequence[int] = None,
         auto_sync: bool = None,
+        id: Optional[int] = None,
         **kwargs,
     ):
         name_loc = Localized._cast(name, False)
@@ -240,6 +243,7 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
             dm_permission=dm_permission and not self._guild_only,
             default_member_permissions=default_member_permissions,
             nsfw=nsfw,
+            id=id,
         )
         self._name_localised = name_loc
 

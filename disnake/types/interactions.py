@@ -351,6 +351,7 @@ class _EditApplicationCommandOptional(TypedDict, total=False):
     name_localizations: Optional[ApplicationCommandLocalizations]
     description_localizations: Optional[ApplicationCommandLocalizations]
     nsfw: Optional[bool]
+    id: Snowflake
 
 
 class EditApplicationCommand(_EditApplicationCommandOptional):

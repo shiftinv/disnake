@@ -562,6 +562,11 @@ class ApplicationCommand(ABC):
             and self._default_permission == other._default_permission
         )
 
+    def need_sync(self, other: ApplicationCommand) -> bool:
+        if self != other:
+            return True
+        return self.id is not None and self.id != other.id
+
     def to_dict(self) -> EditApplicationCommandPayload:
         data: EditApplicationCommandPayload = {
             "type": try_enum_to_int(self.type),
@@ -577,6 +582,9 @@ class ApplicationCommand(ABC):
             data["default_member_permissions"] = str(self._default_member_permissions)
         if (loc := self.name_localizations.data) is not None:
             data["name_localizations"] = loc
+
+        if self.id is not None:
+            data["id"] = self.id
 
         return data
 

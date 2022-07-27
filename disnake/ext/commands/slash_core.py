@@ -426,6 +426,7 @@ class InvokableSlashCommand(InvokableApplicationCommand, SlashCommand):
         guild_ids: Sequence[int] = None,
         connectors: Dict[str, str] = None,
         auto_sync: bool = None,
+        id: Optional[int] = None,
         **kwargs,
     ):
         name_loc = Localized._cast(name, False)
@@ -470,6 +471,7 @@ class InvokableSlashCommand(InvokableApplicationCommand, SlashCommand):
             dm_permission=dm_permission and not self._guild_only,
             default_member_permissions=default_member_permissions,
             nsfw=nsfw,
+            id=id,
         )
 
     def _ensure_assignment_on_copy(self, other: SlashCommandT) -> SlashCommandT:
