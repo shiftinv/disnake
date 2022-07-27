@@ -474,7 +474,7 @@ class ApplicationCommand(ABC):
         Defaults to ``False``.
 
         .. versionadded:: 2.6
-    id: Optional[:class:`int]
+    id: Optional[:class:`int`]
         The ID of the command, if there is a representation on Discord.
 
         .. versionadded:: 2.6
@@ -633,7 +633,7 @@ class UserCommand(ApplicationCommand):
 
         .. versionadded:: 2.6
 
-    id: Optional[:class:`int]
+    id: Optional[:class:`int`]
         The ID of the command, if there is a representation on Discord.
 
         .. versionadded:: 2.6
@@ -740,7 +740,7 @@ class MessageCommand(ApplicationCommand):
 
         .. versionadded:: 2.6
 
-    id: Optional[:class:`int]
+    id: Optional[:class:`int`]
         The ID of the command, if there is a representation on Discord.
 
         .. versionadded:: 2.6
@@ -857,7 +857,7 @@ class SlashCommand(ApplicationCommand):
     options: List[:class:`Option`]
         The list of options the slash command has.
 
-    id: Optional[:class:`int]
+    id: Optional[:class:`int`]
         The ID of the command, if there is a representation on Discord.
 
         .. versionadded:: 2.6
