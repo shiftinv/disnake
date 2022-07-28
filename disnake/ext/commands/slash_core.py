@@ -193,6 +193,12 @@ class SubCommandGroup(InvokableApplicationCommand):
         return f"{self._parent.qualified_name} {self.name}"
 
     @property
+    def mention(self) -> str:
+        # todo: add docs and make ID non-nullable
+        return f"</{self.qualified_name}:{self.id}>"
+
+    # todo: refactor this class to make this not optional
+    @property
     def parent(self) -> Optional[InvokableSlashCommand]:
         """Optional[:class:`InvokableSlashCommand`] The parent of this SubCommandGroup.
 
@@ -342,6 +348,11 @@ class SubCommand(InvokableApplicationCommand):
         if not self._parent:
             return self.name
         return f"{self._parent.qualified_name} {self.name}"
+
+    @property
+    def mention(self) -> str:
+        # todo: add docs and make ID non-nullable
+        return f"</{self.qualified_name}:{self.id}>"
 
     @property
     def parent(self) -> Optional[Union[InvokableSlashCommand, SubCommandGroup]]:
