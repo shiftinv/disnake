@@ -54,6 +54,7 @@ extensions = [
     "resourcelinks",
     "collapse",
     "nitpick_file_ignorer",
+    "sphinxcontrib_uwu",
 ]
 
 autodoc_member_order = "bysource"
