@@ -27,39 +27,27 @@ template = "changelog/_template.rst.jinja"
 package = "disnake"
 filename = "docs/whats_new.rst"
 directory = "changelog/"
-title_format = "v{version}"
+title_format = false
 underlines = "-~"
 issue_format = ":issue:`{issue}`"
 
-    [[tool.towncrier.type]]
-    directory = "breaking"
+    [tool.towncrier.fragment.breaking]
     name = "Breaking Changes"
-    showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "deprecate"
+    [tool.towncrier.fragment.deprecate]
     name = "Deprecations"
-    showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "feature"
+    [tool.towncrier.fragment.feature]
     name = "New Features"
-    showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "bugfix"
+    [tool.towncrier.fragment.bugfix]
     name = "Bug Fixes"
-    showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "doc"
+    [tool.towncrier.fragment.doc]
     name = "Documentation"
-    showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "misc"
+    [tool.towncrier.fragment.misc]
     name = "Miscellaneous"
-    showcontent = true
 
 
 [tool.slotscheck]
