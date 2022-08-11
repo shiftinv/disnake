@@ -1,14 +1,25 @@
+Changelogs
+==========
+
 This directory contains "news fragments" which are short files that contain a small **ReST**-formatted
 text that will be added to the next changelog.
 
 The changelog will be read by **users**, so this description should be aimed at users
 instead of describing internal changes which are only relevant to the developers.
 
+
+Content
+-------
+
 Make sure to use full sentences in the **present tense** and use punctuation, examples:
 
 - Improve Guild.create_text_channel by returning the channel type.
 
 - Command syncing now uses logging instead of print.
+
+
+Names
+-----
 
 Each file should use the following naming: ``<ISSUE>.<TYPE>.rst``, where
 ``<ISSUE>`` is an issue number, and ``<TYPE>`` is one of:
@@ -33,6 +44,38 @@ If you are not sure what issue type to use, don't hesitate to ask in your PR.
 
 ``towncrier`` preserves multiple paragraphs and formatting (code blocks, lists, and so on), but for entries
 other than ``features`` it is usually better to stick to a single paragraph to keep it concise.
+
+
+Links
+-----
+
+If two separate issues/PR belong to the same (larger) change,
+you can link from one changelog fragment to another by using ``{{link:123}}`` as the file content,
+which results in their issue numbers being combined into one entry, like so:
+
+123.feature.rst:
+
+.. code-block::
+
+    Add auto moderation features, API endpoints, and gateway events.
+
+
+145.feature.rst:
+
+.. code-block::
+
+    {{link:123}}
+
+
+The resulting changelog will look like this:
+
+.. code-block:: rst
+
+    - Add auto moderation features, API endpoints, and gateway events. (#123, #145)
+
+
+Building
+--------
 
 You can also run ``nox -s docs`` to build the documentation
 with the draft changelog (http://127.0.0.1:8009/whats_new.html) if you want to get a preview of how your change will look in the final release notes.
