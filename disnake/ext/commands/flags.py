@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from disnake.flags import BaseFlags, alias_flag_value, all_flags_value, fill_with_flags, flag_value
+from disnake.flags import BaseFlags, alias_flag_value, all_flags_value, flag_value
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
 __all__ = ("ApplicationCommandSyncFlags",)
 
 
-@fill_with_flags()
 class ApplicationCommandSyncFlags(BaseFlags):
     """Controls the library's application command syncing policy.
 
