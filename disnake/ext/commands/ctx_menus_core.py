@@ -96,7 +96,6 @@ class InvokableUserCommand(InvokableApplicationCommand, UserCommand):
         name: LocalizedOptional = None,
         dm_permission: bool = None,
         default_member_permissions: Optional[Union[Permissions, int]] = None,
-        nsfw: bool = None,
         guild_ids: Sequence[int] = None,
         auto_sync: bool = None,
         id: Optional[int] = None,
@@ -124,7 +123,6 @@ class InvokableUserCommand(InvokableApplicationCommand, UserCommand):
             name=name_loc._upgrade(self.name),
             dm_permission=dm_permission and not self._guild_only,
             default_member_permissions=default_member_permissions,
-            nsfw=nsfw,
             id=id,
         )
 
@@ -213,7 +211,6 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
         name: LocalizedOptional = None,
         dm_permission: bool = None,
         default_member_permissions: Optional[Union[Permissions, int]] = None,
-        nsfw: bool = None,
         guild_ids: Sequence[int] = None,
         auto_sync: bool = None,
         id: Optional[int] = None,
@@ -225,15 +222,9 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
         self.auto_sync: bool = True if auto_sync is None else auto_sync
 
         try:
-            default_perms: int = func.__default_member_permissions__
+            default_member_permissions = func.__default_member_permissions__
         except AttributeError:
             pass
-        else:
-            if default_member_permissions is not None:
-                raise ValueError(
-                    "Cannot set `default_member_permissions` in both parameter and decorator"
-                )
-            default_member_permissions = default_perms
 
         dm_permission = True if dm_permission is None else dm_permission
 
@@ -241,7 +232,6 @@ class InvokableMessageCommand(InvokableApplicationCommand, MessageCommand):
             name=name_loc._upgrade(self.name),
             dm_permission=dm_permission and not self._guild_only,
             default_member_permissions=default_member_permissions,
-            nsfw=nsfw,
             id=id,
         )
         self._name_localised = name_loc
@@ -289,7 +279,6 @@ def user_command(
     name: LocalizedOptional = None,
     dm_permission: bool = None,
     default_member_permissions: Optional[Union[Permissions, int]] = None,
-    nsfw: bool = None,
     guild_ids: Sequence[int] = None,
     auto_sync: bool = None,
     extras: Dict[str, Any] = None,
@@ -313,12 +302,6 @@ def user_command(
         See :attr:`.ApplicationCommand.default_member_permissions` for details.
 
         .. versionadded:: 2.5
-
-    nsfw: :class:`bool`
-        Whether this command can only be used in NSFW channels.
-        Defaults to ``False``.
-
-        .. versionadded:: 2.6
 
     auto_sync: :class:`bool`
         Whether to automatically register the command. Defaults to ``True``.
@@ -353,7 +336,6 @@ def user_command(
             name=name,
             dm_permission=dm_permission,
             default_member_permissions=default_member_permissions,
-            nsfw=nsfw,
             guild_ids=guild_ids,
             auto_sync=auto_sync,
             extras=extras,
@@ -368,7 +350,6 @@ def message_command(
     name: LocalizedOptional = None,
     dm_permission: bool = None,
     default_member_permissions: Optional[Union[Permissions, int]] = None,
-    nsfw: bool = None,
     guild_ids: Sequence[int] = None,
     auto_sync: bool = None,
     extras: Dict[str, Any] = None,
@@ -395,12 +376,6 @@ def message_command(
         See :attr:`.ApplicationCommand.default_member_permissions` for details.
 
         .. versionadded:: 2.5
-
-    nsfw: :class:`bool`
-        Whether this command can only be used in NSFW channels.
-        Defaults to ``False``.
-
-        .. versionadded:: 2.6
 
     auto_sync: :class:`bool`
         Whether to automatically register the command. Defaults to ``True``.
@@ -435,7 +410,6 @@ def message_command(
             name=name,
             dm_permission=dm_permission,
             default_member_permissions=default_member_permissions,
-            nsfw=nsfw,
             guild_ids=guild_ids,
             auto_sync=auto_sync,
             extras=extras,
