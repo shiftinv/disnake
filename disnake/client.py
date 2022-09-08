@@ -302,24 +302,6 @@ class Client:
 
         .. versionadded:: 2.1
 
-    sync_commands: :class:`bool`
-        Whether to enable automatic synchronization of application commands in your code.
-        Defaults to ``True``, which means that commands in API are automatically synced
-        with the commands specified in your code.
-
-        .. versionadded:: 2.1
-
-    sync_commands_debug: :class:`bool`
-        Whether to always show sync debug logs (uses ``INFO`` log level if it's enabled, prints otherwise).
-        If disabled, uses the default ``DEBUG`` log level which isn't shown unless the log level is changed manually.
-        Useful for tracking the commands being registered in the API.
-
-        .. versionadded:: 2.1
-
-        .. versionchanged:: 2.4
-            Changes the log level of corresponding messages from ``DEBUG`` to ``INFO`` or ``print``\\s them,
-            instead of controlling whether they are enabled at all.
-
     localization_provider: :class:`.LocalizationProtocol`
         An implementation of :class:`.LocalizationProtocol` to use for localization of
         application commands.
