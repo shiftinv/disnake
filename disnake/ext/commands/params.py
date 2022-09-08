@@ -67,20 +67,19 @@ from .converter import CONVERTER_MAPPING
 T_ = TypeVar("T_")
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec, Self
+    from typing_extensions import Concatenate, ParamSpec, Self, TypeGuard
 
     from disnake.app_commands import Choices
     from disnake.i18n import LocalizationValue, LocalizedOptional
     from disnake.types.interactions import ApplicationCommandOptionChoiceValue
 
+    from .base_core import CogT
     from .cog import Cog
     from .slash_core import InvokableSlashCommand, SubCommand
 
     AnySlashCommand = Union[InvokableSlashCommand, SubCommand]
 
     P = ParamSpec("P")
-
-    from typing_extensions import TypeGuard
 
     TChoice = TypeVar("TChoice", bound=ApplicationCommandOptionChoiceValue)
 else:
@@ -209,10 +208,12 @@ class Injection(Generic[P, T_]):
 
     _registered: ClassVar[Dict[Any, Injection]] = {}
 
-    function: Callable
+    function: Callable[P, T_]
     autocompleters: Dict[str, Callable]
 
-    def __init__(self, function: Callable, *, autocompleters: Dict[str, Callable] = None) -> None:
+    def __init__(
+        self, function: Callable[P, T_], *, autocompleters: Dict[str, Callable] = None
+    ) -> None:
         self.function = function
         self.autocompleters = autocompleters if autocompleters else {}
         self._injected: Optional[Cog] = None
@@ -238,7 +239,11 @@ class Injection(Generic[P, T_]):
 
     @classmethod
     def register(
-        cls, function: Callable, annotation: Any, *, autocompleters: Dict[str, Callable] = None
+        cls,
+        function: Callable[P, T_],
+        annotation: Any,
+        *,
+        autocompleters: Dict[str, Callable] = None,
     ) -> Self:
         self = cls(function, autocompleters=autocompleters)
         cls._registered[annotation] = self
@@ -1253,9 +1258,23 @@ else:
         return ConverterMethod(function)
 
 
+@overload
 def register_injection(
-    function: Callable, *, autocompleters: Dict[str, Callable] = None
-) -> Injection:
+    function: Callable[Concatenate[CogT, P], T_], *, autocompleters: Dict[str, Callable] = None
+) -> Injection[P, T_]:
+    ...
+
+
+@overload
+def register_injection(
+    function: Callable[P, T_], *, autocompleters: Dict[str, Callable] = None
+) -> Injection[P, T_]:
+    ...
+
+
+def register_injection(
+    function: Callable[..., T_], *, autocompleters: Dict[str, Callable] = None
+) -> Injection[..., T_]:
     """A decorator to register a global injection.
 
     .. versionadded:: 2.3
