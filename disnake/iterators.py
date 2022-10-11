@@ -449,7 +449,7 @@ class HistoryIterator(PageIterator["MessagePayload", "Message"]):
         after: Optional[SnowflakeTime] = None,
         around: Optional[SnowflakeTime] = None,
         limit: Optional[int] = None,
-        oldest_first: bool = None,
+        oldest_first: Optional[bool] = None,
     ):
         if around is not None and limit is not None:
             # API only allows <= 100, but always returns the next larger odd number of messages
