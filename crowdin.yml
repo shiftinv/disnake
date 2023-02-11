@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+
+# Crowdin credentials
+project_id: 567397
+api_token_env: API_KEY
+
+base_path: ./docs
+# Preserve directory structure on server
+preserve_hierarchy: true
+
+files:
+  # https://developer.crowdin.com/configuration-file/#gettext-project
+  - source: "/_build/locale/**/*.pot"
+    translation: "/locale/%two_letters_code%/LC_MESSAGES/%file_name%.po"
+    export_only_approved: true

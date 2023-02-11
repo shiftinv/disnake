@@ -189,6 +189,7 @@ ignore = [
     ".pre-commit-config.yaml",
     ".readthedocs.yml",
     ".libcst.codemod.yaml",
+    "crowdin.yml",
     "noxfile.py",
     # docs
     "CONTRIBUTING.md",

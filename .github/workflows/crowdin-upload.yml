@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: MIT
+
+name: Crowdin Upload
+
+# TODO: codeowners
+
+on:
+  workflow_dispatch:
+  ## only allowing manual dispatch for now while still doing initial tests
+  # workflow_run:
+  #   workflows: ["docs"]
+  #   branches: ["master"]
+  #   types: [completed]
+
+permissions:
+  read-all
+
+# https://github.com/crowdin/github-action/wiki/Handling-parallel-runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    # unlike the other workflows, we are using version 20.04 here as
+    # readthedocs uses 20.04 for building our docs, and we want to be explicit
+    runs-on: ubuntu-20.04
+    # if:
+    #   github.event_name == 'workflow_dispatch'
+    #   || github.event.workflow_run.conclusion == 'success'
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up environment
+      uses: ./.github/actions/setup-env
+      with:
+        python-version: 3.8
+        nox-setup: "docs"
+
+    - name: Run sphinx-build
+      run: |
+        cd docs/
+        sphinx-build -W -b gettext . _build/locale version_guarantees.rst quickstart.rst discord.rst
+
+    - name: Upload to Crowdin
+      uses: crowdin/github-action@v1.6.0
+      with:
+        config: crowdin.yml
+        upload_sources: true
+        upload_translations: false
+        download_translations: false
+      env:
+        API_KEY: ${{ secrets.CROWDIN_API_KEY }}
+        INPUT_DEBUG_MODE: true
