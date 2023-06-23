@@ -3,8 +3,9 @@
 name: check-pull-labels
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, labeled, unlabeled, reopened]
+  workflow_call:
+  # pull_request_target:
+  #   types: [opened, synchronize, labeled, unlabeled, reopened]
 
 permissions:
   pull-requests: read

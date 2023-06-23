@@ -3,15 +3,16 @@
 name: Lint & Test
 
 on:
-  push:
-    branches:
-      - 'master'
-      - 'v[0-9]+.[0-9]+.x'  # matches to backport branches, e.g. 3.6
-      - 'run-ci/*'
-    tags:
-  pull_request:
-  merge_group:
-    types: [checks_requested]
+  workflow_call:
+  # push:
+  #   branches:
+  #     - 'master'
+  #     - 'v[0-9]+.[0-9]+.x'  # matches to backport branches, e.g. 3.6
+  #     - 'run-ci/*'
+  #   tags:
+  # pull_request:
+  # merge_group:
+  #   types: [checks_requested]
 
 permissions:
   read-all

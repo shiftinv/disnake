@@ -3,10 +3,11 @@
 name: changelog entry
 
 on:
-  pull_request:
-    types: [opened, synchronize, labeled, unlabeled, reopened]
-    branches:
-      - master
+  workflow_call:
+  # pull_request:
+  #   types: [opened, synchronize, labeled, unlabeled, reopened]
+  #   branches:
+  #     - master
 
 permissions:
   contents: read
