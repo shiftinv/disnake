@@ -7,6 +7,8 @@ import types
 from typing import TYPE_CHECKING, Callable, ContextManager, Optional, Type, TypeVar
 from unittest import mock
 
+import disnake
+
 if TYPE_CHECKING:
     # for pyright
     from typing_extensions import reveal_type as reveal_type
@@ -68,3 +70,12 @@ class freeze_time(ContextManager):
                     return func(*args, **kwargs)
 
             return wrap_sync  # type: ignore
+
+
+SnowflakeT = TypeVar("SnowflakeT", bound=disnake.abc.Snowflake)
+
+
+def create_snowflake(cls: Type[SnowflakeT], id: int) -> SnowflakeT:
+    self = cls.__new__(cls)
+    self.id = id
+    return self
