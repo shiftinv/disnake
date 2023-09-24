@@ -37,6 +37,9 @@ class Object(Hashable):
 
             Checks if two objects are equal.
 
+            Two :class:`Object`\\s are considered equal if their :attr:`.id`\\s match,
+            and if both objects have a :attr:`.type`, those types must also be equal.
+
         .. describe:: x != y
 
             Checks if two objects are not equal.
@@ -49,6 +52,10 @@ class Object(Hashable):
     ----------
     id: :class:`int`
         The ID of the object.
+    type: Optional[:class:`type`]
+        The Discord model type represented by this object, if any.
+
+        .. versionadded:: 2.10
     """
 
     # TODO: default `type` to MISSING?
