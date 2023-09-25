@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Union
 
+from . import abc
 from .appinfo import PartialAppInfo
 from .asset import Asset
 from .enums import ChannelType, InviteTarget, NSFWLevel, VerificationLevel, try_enum
+from .guild import Guild
 from .guild_scheduled_event import GuildScheduledEvent
 from .mixins import Hashable
 from .object import Object
@@ -24,8 +26,6 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-    from .abc import GuildChannel
-    from .guild import Guild
     from .state import ConnectionState
     from .types.channel import (
         GroupInviteRecipient as GroupInviteRecipientPayload,
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
     GatewayInvitePayload = Union[InviteCreateEvent, InviteDeleteEvent]
     InviteGuildType = Union[Guild, "PartialInviteGuild", Object]
-    InviteChannelType = Union[GuildChannel, "PartialInviteChannel", Object]
+    InviteChannelType = Union[abc.GuildChannel, "PartialInviteChannel", Object]
 
 
 class PartialInviteChannel:
@@ -408,7 +408,7 @@ class Invite(Hashable):
         state: ConnectionState,
         data: Union[InvitePayload, GatewayInvitePayload],
         guild: Optional[Union[PartialInviteGuild, Guild]] = None,
-        channel: Optional[Union[PartialInviteChannel, GuildChannel]] = None,
+        channel: Optional[Union[PartialInviteChannel, abc.GuildChannel]] = None,
     ) -> None:
         self._state: ConnectionState = state
         self.code: str = data["code"]
@@ -484,7 +484,7 @@ class Invite(Hashable):
         # todo: this is no longer true
         # As far as I know, invites always need a channel
         # So this should never raise.
-        channel: Union[PartialInviteChannel, GuildChannel] = PartialInviteChannel(
+        channel: Union[PartialInviteChannel, abc.GuildChannel] = PartialInviteChannel(
             data=data["channel"], state=state
         )
         if guild is not None and not isinstance(guild, PartialInviteGuild):
@@ -499,10 +499,10 @@ class Invite(Hashable):
         guild: Optional[Union[Guild, Object]] = state._get_guild(guild_id)
         channel_id = int(data["channel_id"])
         if guild is not None:
-            channel = guild.get_channel(channel_id) or Object(id=channel_id)
+            channel = guild.get_channel(channel_id) or Object(id=channel_id, type=abc.GuildChannel)
         else:
-            guild = Object(id=guild_id) if guild_id is not None else None
-            channel = Object(id=channel_id)
+            guild = Object(id=guild_id, type=Guild) if guild_id is not None else None
+            channel = Object(id=channel_id, type=abc.GuildChannel)
 
         return cls(
             state=state,
@@ -529,7 +529,7 @@ class Invite(Hashable):
     def _resolve_channel(
         self,
         data: Optional[InviteChannelPayload],
-        channel: Optional[Union[PartialInviteChannel, GuildChannel]] = None,
+        channel: Optional[Union[PartialInviteChannel, abc.GuildChannel]] = None,
     ) -> Optional[InviteChannelType]:
         if channel is not None:
             return channel

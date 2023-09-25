@@ -2142,7 +2142,9 @@ class AutoShardedConnectionState(ConnectionState):
             new_guild = self._get_guild(msg.guild.id)
             if new_guild is not None and new_guild is not msg.guild:
                 channel_id = msg.channel.id
-                channel = new_guild._resolve_channel(channel_id) or Object(id=channel_id)
+                channel = new_guild._resolve_channel(channel_id) or Object(
+                    id=channel_id, type=type(msg.channel)
+                )
                 # channel will either be a TextChannel, VoiceChannel, Thread, StageChannel, or Object
                 msg._rebind_cached_references(new_guild, channel)  # type: ignore
 
@@ -2157,7 +2159,9 @@ class AutoShardedConnectionState(ConnectionState):
             if new_guild is None:
                 continue
 
-            new_channel = new_guild._resolve_channel(vc.channel.id) or Object(id=vc.channel.id)
+            new_channel = new_guild._resolve_channel(vc.channel.id) or Object(
+                id=vc.channel.id, type=type(vc.channel)
+            )
             if new_channel is not vc.channel:
                 vc.channel = new_channel  # type: ignore
 

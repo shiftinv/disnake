@@ -305,7 +305,7 @@ AuditLogDiff
         The first element is the object being targeted, which can either
         be a :class:`Member` or :class:`User` or :class:`Role`. If this object
         is not found then it is a :class:`Object` with an ID being filled and
-        a ``type`` attribute set to either ``'role'`` or ``'member'`` to help
+        a ``type`` attribute set to either :class:`Role` or :class:`Member` to help
         decide what type of ID it is.
 
         :type: List[Tuple[Union[:class:`Member`, :class:`User`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]]

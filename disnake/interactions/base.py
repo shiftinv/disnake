@@ -199,7 +199,7 @@ class Interaction(Generic[ClientT]):
         self._permissions = None
 
         if self.guild_id and (member := data.get("member")):
-            guild: Guild = self.guild or Object(id=self.guild_id)  # type: ignore
+            guild: Guild = self.guild or Object(id=self.guild_id, type=Guild)  # type: ignore
             self.author = (
                 isinstance(guild, Guild)
                 and guild.get_member(int(member["user"]["id"]))
@@ -1820,7 +1820,7 @@ class InteractionDataResolved(Dict[str, Any]):
         guild_fallback: Union[Guild, Object] = MISSING
         if guild_id is not None:
             guild = state._get_guild(guild_id)
-            guild_fallback = guild or Object(id=guild_id)
+            guild_fallback = guild or Object(id=guild_id, type=Guild)
 
         for str_id, user in users.items():
             user_id = int(str_id)

@@ -22,14 +22,23 @@ from typing import (
 from . import abc, enums, flags, utils
 from .app_commands import ApplicationCommandPermissions
 from .asset import Asset
-from .automod import AutoModAction, AutoModTriggerMetadata, _automod_action_factory
+from .automod import AutoModAction, AutoModRule, AutoModTriggerMetadata, _automod_action_factory
+from .channel import StageChannel
 from .colour import Colour
+from .emoji import Emoji
+from .guild_scheduled_event import GuildScheduledEvent
+from .integrations import PartialIntegration
 from .invite import Invite
+from .member import Member
 from .mixins import Hashable
 from .object import Object
 from .partial_emoji import PartialEmoji
 from .permissions import PermissionOverwrite, Permissions
+from .role import Role
+from .stage_instance import StageInstance
+from .sticker import GuildSticker
 from .threads import ForumTag, Thread
+from .webhook import Webhook
 
 __all__ = (
     "AuditLogDiff",
@@ -42,15 +51,7 @@ if TYPE_CHECKING:
     import datetime
 
     from .app_commands import APIApplicationCommand
-    from .automod import AutoModRule
-    from .emoji import Emoji
     from .guild import Guild
-    from .guild_scheduled_event import GuildScheduledEvent
-    from .integrations import PartialIntegration
-    from .member import Member
-    from .role import Role
-    from .stage_instance import StageInstance
-    from .sticker import GuildSticker
     from .types.audit_log import (
         AuditLogChange as AuditLogChangePayload,
         AuditLogEntry as AuditLogEntryPayload,
@@ -68,7 +69,6 @@ if TYPE_CHECKING:
     from .types.snowflake import Snowflake
     from .types.threads import ForumTag as ForumTagPayload
     from .user import User
-    from .webhook import Webhook
 
 
 def _transform_permissions(entry: AuditLogEntry, data: str) -> Permissions:
@@ -89,7 +89,7 @@ def _transform_channel(
     if data is None:
         return None
     channel = entry.guild.get_channel(int(data))
-    return channel or Object(id=data)
+    return channel or Object(id=data, type=abc.GuildChannel)
 
 
 def _transform_role(
@@ -98,7 +98,7 @@ def _transform_role(
     if data is None:
         return None
     role = entry.guild.get_role(int(data))
-    return role or Object(id=data)
+    return role or Object(id=data, type=Role)
 
 
 def _transform_member_id(
@@ -127,13 +127,16 @@ def _transform_overwrites(
         ow_type = elem["type"]
         ow_id = int(elem["id"])
         target = None
+        _type = None
         if ow_type == 0:
+            _type = Role
             target = entry.guild.get_role(ow_id)
         elif ow_type == 1:
+            _type = Member
             target = entry._get_member(ow_id)
 
         if target is None:
-            target = Object(id=ow_id)
+            target = Object(id=ow_id, type=_type)
 
         overwrites.append((target, ow))
 
@@ -190,7 +193,7 @@ def _transform_tag_id(
             if tag := forum.get_tag(tag_id):
                 break
 
-    return tag or Object(id=tag_id)
+    return tag or Object(id=tag_id, type=ForumTag)
 
 
 T = TypeVar("T")
@@ -448,7 +451,7 @@ class AuditLogChanges:
             role = g.get_role(role_id)
 
             if role is None:
-                role = Object(id=role_id)
+                role = Object(id=role_id, type=Role)
                 role.name = e["name"]  # type: ignore
 
             data.append(role)
@@ -631,20 +634,21 @@ class AuditLogEntry(Hashable):
                 elif the_type == "0":
                     role = self.guild.get_role(instance_id)
                     if role is None:
-                        role = Object(id=instance_id)
+                        role = Object(id=instance_id, type=Role)
                         role.name = extra.get("role_name")  # type: ignore
                     self.extra = role
             elif self.action.name.startswith("stage_instance"):
                 elems = {
                     "channel": self._get_channel_or_thread(
-                        utils._get_as_snowflake(extra, "channel_id")
+                        utils._get_as_snowflake(extra, "channel_id"), type=StageChannel
                     )
                 }
                 self.extra = type("_AuditLogProxy", (), elems)()
             elif self.action is enums.AuditLogAction.application_command_permission_update:
                 app_id = int(extra["application_id"])
                 elems = {
-                    "integration": self._get_integration_by_application_id(app_id) or Object(app_id)
+                    "integration": self._get_integration_by_application_id(app_id)
+                    or Object(app_id, type=PartialIntegration)
                 }
                 self.extra = type("_AuditLogProxy", (), elems)()
             elif self.action in (
@@ -700,14 +704,18 @@ class AuditLogEntry(Hashable):
     def _get_member(self, user_id: Optional[int]) -> Union[Member, User, Object, None]:
         if not user_id:
             return None
-        return self.guild.get_member(user_id) or self._users.get(user_id) or Object(id=user_id)
+        return (
+            self.guild.get_member(user_id)
+            or self._users.get(user_id)
+            or Object(id=user_id, type=User)
+        )
 
     def _get_channel_or_thread(
-        self, channel_id: Optional[int]
+        self, channel_id: Optional[int], *, type: Optional[Type[abc.Snowflake]] = None
     ) -> Union[abc.GuildChannel, Thread, Object, None]:
         if not channel_id:
             return None
-        return self.guild.get_channel_or_thread(channel_id) or Object(channel_id)
+        return self.guild.get_channel_or_thread(channel_id) or Object(channel_id, type=type)
 
     def _get_integration_by_application_id(
         self, application_id: int
@@ -786,13 +794,13 @@ class AuditLogEntry(Hashable):
         return self.guild
 
     def _convert_target_channel(self, target_id: int) -> Union[abc.GuildChannel, Object]:
-        return self.guild.get_channel(target_id) or Object(id=target_id)
+        return self.guild.get_channel(target_id) or Object(id=target_id, type=abc.GuildChannel)
 
     def _convert_target_user(self, target_id: int) -> Union[Member, User, Object, None]:
         return self._get_member(target_id)
 
     def _convert_target_role(self, target_id: int) -> Union[Role, Object]:
-        return self.guild.get_role(target_id) or Object(id=target_id)
+        return self.guild.get_role(target_id) or Object(id=target_id, type=Role)
 
     def _convert_target_invite(self, target_id: int) -> Invite:
         # invites have target_id set to null
@@ -815,26 +823,28 @@ class AuditLogEntry(Hashable):
         return obj
 
     def _convert_target_webhook(self, target_id: int) -> Union[Webhook, Object]:
-        return self._webhooks.get(target_id) or Object(id=target_id)
+        return self._webhooks.get(target_id) or Object(id=target_id, type=Webhook)
 
     def _convert_target_emoji(self, target_id: int) -> Union[Emoji, Object]:
-        return self._state.get_emoji(target_id) or Object(id=target_id)
+        return self._state.get_emoji(target_id) or Object(id=target_id, type=Emoji)
 
     def _convert_target_message(self, target_id: int) -> Union[Member, User, Object, None]:
         return self._get_member(target_id)
 
     def _convert_target_integration(self, target_id: int) -> Union[PartialIntegration, Object]:
-        return self._integrations.get(target_id) or Object(id=target_id)
+        return self._integrations.get(target_id) or Object(id=target_id, type=PartialIntegration)
 
     def _convert_target_stage_instance(self, target_id: int) -> Union[StageInstance, Object]:
-        return self.guild.get_stage_instance(target_id) or Object(id=target_id)
+        return self.guild.get_stage_instance(target_id) or Object(id=target_id, type=StageInstance)
 
     def _convert_target_sticker(self, target_id: int) -> Union[GuildSticker, Object]:
-        return self._state.get_sticker(target_id) or Object(id=target_id)
+        return self._state.get_sticker(target_id) or Object(id=target_id, type=GuildSticker)
 
     def _convert_target_thread(self, target_id: int) -> Union[Thread, Object]:
         return (
-            self.guild.get_thread(target_id) or self._threads.get(target_id) or Object(id=target_id)
+            self.guild.get_thread(target_id)
+            or self._threads.get(target_id)
+            or Object(id=target_id, type=Thread)
         )
 
     def _convert_target_guild_scheduled_event(
@@ -843,7 +853,7 @@ class AuditLogEntry(Hashable):
         return (
             self.guild.get_scheduled_event(target_id)
             or self._guild_scheduled_events.get(target_id)
-            or Object(id=target_id)
+            or Object(id=target_id, type=GuildScheduledEvent)
         )
 
     def _convert_target_application_command_or_integration(
@@ -866,4 +876,4 @@ class AuditLogEntry(Hashable):
         return Object(id=target_id)
 
     def _convert_target_automod_rule(self, target_id: int) -> Union[AutoModRule, Object]:
-        return self._automod_rules.get(target_id) or Object(id=target_id)
+        return self._automod_rules.get(target_id) or Object(id=target_id, type=AutoModRule)

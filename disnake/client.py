@@ -2433,7 +2433,7 @@ class Client:
         else:
             # the factory can't be a DMChannel or GroupChannel here
             guild_id = int(data["guild_id"])  # type: ignore
-            guild = self.get_guild(guild_id) or Object(id=guild_id)
+            guild = self.get_guild(guild_id) or Object(id=guild_id, type=Guild)
             # GuildChannels expect a Guild, we may be passing an Object
             channel = factory(guild=guild, state=self._connection, data=data)  # type: ignore
 
