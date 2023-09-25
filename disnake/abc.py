@@ -330,7 +330,7 @@ class GuildChannel(ABC):
         default_thread_slowmode_delay: Optional[int] = MISSING,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = MISSING,
         type: ChannelType = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         bitrate: int = MISSING,
         user_limit: int = MISSING,
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
@@ -398,12 +398,17 @@ class GuildChannel(ABC):
                         f"Expected PermissionOverwrite, received {perm.__class__.__name__}"
                     )
 
+                if isinstance(target, Role) or (isinstance(target, Object) and target.type is Role):
+                    _type = _Overwrites.ROLE
+                else:
+                    _type = _Overwrites.MEMBER
+
                 allow, deny = perm.pair()
                 payload: PermissionOverwritePayload = {
                     "allow": str(allow.value),
                     "deny": str(deny.value),
                     "id": target.id,
-                    "type": _Overwrites.ROLE if isinstance(target, Role) else _Overwrites.MEMBER,
+                    "type": _type,
                 }
                 overwrites_payload.append(payload)
 
@@ -526,24 +531,31 @@ class GuildChannel(ABC):
         """:class:`datetime.datetime`: Returns the channel's creation time in UTC."""
         return utils.snowflake_time(self.id)
 
-    def overwrites_for(self, obj: Union[Role, User]) -> PermissionOverwrite:
+    def overwrites_for(self, obj: Union[Role, User, Object]) -> PermissionOverwrite:
         """Returns the channel-specific overwrites for a member or a role.
 
         Parameters
         ----------
-        obj: Union[:class:`.Role`, :class:`.abc.User`]
-            The role or user denoting
-            whose overwrite to get.
+        obj: Union[:class:`.Role`, :class:`.abc.User`, :class:`.Object`]
+            The role or user denoting whose overwrite to get.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object`\\s.
 
         Returns
         -------
         :class:`~disnake.PermissionOverwrite`
             The permission overwrites for this object.
         """
+        if isinstance(obj, Object):
+            _type = obj.type or Object
+        else:
+            _type = obj.__class__
+
         predicate: Callable[[_Overwrites], bool]
-        if isinstance(obj, User):
+        if issubclass(_type, User):
             predicate = lambda p: p.is_member()
-        elif isinstance(obj, Role):
+        elif issubclass(_type, Role):
             predicate = lambda p: p.is_role()
         else:
             predicate = lambda p: True
@@ -833,7 +845,7 @@ class GuildChannel(ABC):
     @overload
     async def set_permissions(
         self,
-        target: Union[Member, Role],
+        target: Union[Member, Role, Object],
         *,
         overwrite: Optional[PermissionOverwrite] = ...,
         reason: Optional[str] = ...,
@@ -844,7 +856,7 @@ class GuildChannel(ABC):
     @_overload_with_permissions
     async def set_permissions(
         self,
-        target: Union[Member, Role],
+        target: Union[Member, Role, Object],
         *,
         reason: Optional[str] = ...,
         add_reactions: Optional[bool] = ...,
@@ -906,19 +918,19 @@ class GuildChannel(ABC):
 
     async def set_permissions(
         self,
-        target,
+        target: Union[User, Role, Object],
         *,
         overwrite: Optional[PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
-        **permissions,
+        **permissions: Optional[bool],
     ) -> None:
         """|coro|
 
         Sets the channel specific permission overwrites for a target in the
         channel.
 
-        The ``target`` parameter should either be a :class:`.Member` or a
-        :class:`.Role` that belongs to guild.
+        The ``target`` parameter should either be a :class:`.Member`,
+        :class:`.Role`, or :class:`.Object` that belongs to guild.
 
         The ``overwrite`` parameter, if given, must either be ``None`` or
         :class:`.PermissionOverwrite`. For convenience, you can pass in
@@ -958,8 +970,11 @@ class GuildChannel(ABC):
 
         Parameters
         ----------
-        target: Union[:class:`.Member`, :class:`.Role`]
+        target: Union[:class:`.Member`, :class:`.Role`, :class:`.Object`]
             The member or role to overwrite permissions for.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object`\\s with a valid :attr:`.type <.Object.type>`.
         overwrite: Optional[:class:`.PermissionOverwrite`]
             The permissions to allow and deny to the target, or ``None`` to
             delete the overwrite.
@@ -985,12 +1000,19 @@ class GuildChannel(ABC):
         """
         http = self._state.http
 
-        if isinstance(target, User):
+        if isinstance(target, Object):
+            _type = target.type or Object
+        else:
+            _type = target.__class__
+
+        if issubclass(_type, User):
             perm_type = _Overwrites.MEMBER
-        elif isinstance(target, Role):
+        elif issubclass(_type, Role):
             perm_type = _Overwrites.ROLE
         else:
-            raise TypeError("target parameter must be either Member or Role")
+            raise TypeError(
+                "target parameter must be either Member or Role, or an Object with a valid type"
+            )
 
         if overwrite is MISSING:
             if len(permissions) == 0:
@@ -1002,8 +1024,6 @@ class GuildChannel(ABC):
         else:
             if len(permissions) > 0:
                 raise TypeError("Cannot mix overwrite and keyword arguments.")
-
-        # TODO: wait for event
 
         if overwrite is None:
             await http.delete_channel_permissions(self.id, target.id, reason=reason)
@@ -1021,7 +1041,7 @@ class GuildChannel(ABC):
         *,
         name: Optional[str] = None,
         category: Optional[Snowflake] = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
     ) -> Self:
         # if the overwrites are MISSING, defaults to the
@@ -1038,24 +1058,32 @@ class GuildChannel(ABC):
                         f"Expected PermissionOverwrite, received {perm.__class__.__name__}"
                     )
 
+                if isinstance(target, Role) or (isinstance(target, Object) and target.type is Role):
+                    _type = _Overwrites.ROLE
+                else:
+                    _type = _Overwrites.MEMBER
+
                 allow, deny = perm.pair()
                 payload: PermissionOverwritePayload = {
                     "allow": str(allow.value),
                     "deny": str(deny.value),
                     "id": target.id,
-                    "type": (_Overwrites.ROLE if isinstance(target, Role) else _Overwrites.MEMBER),
+                    "type": _type,
                 }
                 overwrites_payload.append(payload)
         else:
             overwrites_payload = [x._asdict() for x in self._overwrites]
         base_attrs["permission_overwrites"] = overwrites_payload
+
         if category is not MISSING:
             base_attrs["parent_id"] = category.id if category else None
         else:
             # if no category was given don't change the category
             base_attrs["parent_id"] = self.category_id
+
         base_attrs["name"] = name or self.name
         channel_type = base_attrs.get("type") or self.type.value
+
         guild_id = self.guild.id
         cls = self.__class__
         data = await self._state.http.create_channel(

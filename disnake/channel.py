@@ -72,6 +72,7 @@ if TYPE_CHECKING:
     from .guild import Guild, GuildChannel as GuildChannelType
     from .member import Member, VoiceState
     from .message import AllowedMentions, Message, PartialMessage
+    from .object import Object
     from .role import Role
     from .state import ConnectionState
     from .sticker import GuildSticker, StickerItem
@@ -355,7 +356,7 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         default_thread_slowmode_delay: Optional[int] = ...,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = ...,
         type: ChannelType = ...,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = ...,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = ...,
         flags: ChannelFlags = ...,
         reason: Optional[str] = ...,
     ) -> TextChannel:
@@ -374,7 +375,7 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         default_thread_slowmode_delay: Optional[int] = MISSING,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = MISSING,
         type: ChannelType = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         flags: ChannelFlags = MISSING,
         reason: Optional[str] = None,
         **kwargs: Never,
@@ -428,9 +429,12 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
             The new type of this text channel. Currently, only conversion between
             :attr:`ChannelType.text` and :attr:`ChannelType.news` is supported. This
             is only available to guilds that contain ``NEWS`` in :attr:`Guild.features`.
-        overwrites: :class:`Mapping`
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`Mapping` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply to the channel.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         default_auto_archive_duration: Optional[Union[:class:`int`, :class:`ThreadArchiveDuration`]]
             The new default auto archive duration in minutes for threads created in this channel.
             Must be one of ``60``, ``1440``, ``4320``, or ``10080``.
@@ -490,7 +494,7 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
         slowmode_delay: int = MISSING,
         default_thread_slowmode_delay: Optional[int] = MISSING,
         default_auto_archive_duration: AnyThreadArchiveDuration = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         news: bool = MISSING,
         reason: Optional[str] = None,
     ) -> TextChannel:
@@ -533,9 +537,13 @@ class TextChannel(disnake.abc.Messageable, disnake.abc.GuildChannel, Hashable):
             to this channel's default thread slowmode delay.
         default_auto_archive_duration: Union[:class:`int`, :class:`ThreadArchiveDuration`]
             The default auto archive duration of the new channel. If not provided, defaults to this channel's default auto archive duration.
-        overwrites: :class:`Mapping`
-            A :class:`Mapping` of target (either a role or a member) to :class:`PermissionOverwrite`
-            to apply to the channel. If not provided, defaults to this channel's overwrites.
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
+            A :class:`Mapping` of target (either a role or a member) to
+            :class:`PermissionOverwrite` to apply to the channel.
+            If not provided, defaults to this channel's overwrites.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         news: :class:`bool`
             Whether the new channel should be a news channel. News channels are text channels that can be followed.
             This is only available to guilds that contain ``NEWS`` in :attr:`Guild.features`. If not provided, defaults to the current type of this channel.
@@ -1337,7 +1345,7 @@ class VoiceChannel(disnake.abc.Messageable, VocalGuildChannel):
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
         video_quality_mode: VideoQualityMode = MISSING,
         nsfw: bool = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         slowmode_delay: Optional[int] = MISSING,
         reason: Optional[str] = None,
     ) -> VoiceChannel:
@@ -1376,9 +1384,13 @@ class VoiceChannel(disnake.abc.Messageable, VocalGuildChannel):
             The video quality mode of the new channel. If not provided, defaults to this channel's video quality mode.
         nsfw: :class:`bool`
             Whether the new channel should be nsfw or not. If not provided, defaults to this channel's NSFW value.
-        overwrites: :class:`Mapping`
-            A :class:`Mapping` of target (either a role or a member) to :class:`PermissionOverwrite` to apply
-            to the channel. If not provided, defaults to this channel's overwrites.
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
+            A :class:`Mapping` of target (either a role or a member) to
+            :class:`PermissionOverwrite` to apply to the channel.
+            If not provided, defaults to this channel's overwrites.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         slowmode_delay: Optional[:class:`int`]
             The slowmode of the new channel. If not provided, defaults to this channel's slowmode.
         reason: Optional[:class:`str`]
@@ -1505,7 +1517,7 @@ class VoiceChannel(disnake.abc.Messageable, VocalGuildChannel):
         position: int = ...,
         sync_permissions: bool = ...,
         category: Optional[Snowflake] = ...,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = ...,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = ...,
         rtc_region: Optional[Union[str, VoiceRegion]] = ...,
         video_quality_mode: VideoQualityMode = ...,
         nsfw: bool = ...,
@@ -1524,7 +1536,7 @@ class VoiceChannel(disnake.abc.Messageable, VocalGuildChannel):
         position: int = MISSING,
         sync_permissions: bool = MISSING,
         category: Optional[Snowflake] = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
         video_quality_mode: VideoQualityMode = MISSING,
         nsfw: bool = MISSING,
@@ -1567,9 +1579,12 @@ class VoiceChannel(disnake.abc.Messageable, VocalGuildChannel):
             category.
         reason: Optional[:class:`str`]
             The reason for editing this channel. Shows up on the audit log.
-        overwrites: :class:`Mapping`
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`Mapping` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply to the channel.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         rtc_region: Optional[Union[:class:`str`, :class:`VoiceRegion`]]
             The new region for the voice channel's voice communication.
             A value of ``None`` indicates automatic voice region detection.
@@ -2041,7 +2056,7 @@ class StageChannel(disnake.abc.Messageable, VocalGuildChannel):
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
         video_quality_mode: VideoQualityMode = MISSING,
         nsfw: bool = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
     ) -> StageChannel:
         """|coro|
@@ -2083,9 +2098,13 @@ class StageChannel(disnake.abc.Messageable, VocalGuildChannel):
             The video quality mode of the new channel. If not provided, defaults to this channel's video quality mode.
         nsfw: :class:`bool`
             Whether the new channel should be nsfw or not. If not provided, defaults to this channel's NSFW value.
-        overwrites: :class:`Mapping`
-            A :class:`Mapping` of target (either a role or a member) to :class:`PermissionOverwrite`
-            to apply to the channel. If not provided, defaults to this channel's overwrites.
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
+            A :class:`Mapping` of target (either a role or a member) to
+            :class:`PermissionOverwrite` to apply to the channel.
+            If not provided, defaults to this channel's overwrites.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         reason: Optional[:class:`str`]
             The reason for cloning this channel. Shows up on the audit log.
 
@@ -2311,7 +2330,7 @@ class StageChannel(disnake.abc.Messageable, VocalGuildChannel):
         position: int = ...,
         sync_permissions: bool = ...,
         category: Optional[Snowflake] = ...,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = ...,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = ...,
         rtc_region: Optional[Union[str, VoiceRegion]] = ...,
         video_quality_mode: VideoQualityMode = ...,
         nsfw: bool = ...,
@@ -2330,7 +2349,7 @@ class StageChannel(disnake.abc.Messageable, VocalGuildChannel):
         position: int = MISSING,
         sync_permissions: bool = MISSING,
         category: Optional[Snowflake] = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
         video_quality_mode: VideoQualityMode = MISSING,
         nsfw: bool = MISSING,
@@ -2381,9 +2400,12 @@ class StageChannel(disnake.abc.Messageable, VocalGuildChannel):
         category: Optional[:class:`abc.Snowflake`]
             The new category for this channel. Can be ``None`` to remove the
             category.
-        overwrites: :class:`Mapping`
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`Mapping` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply to the channel.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         rtc_region: Optional[Union[:class:`str`, :class:`VoiceRegion`]]
             The new region for the stage channel's voice communication.
             A value of ``None`` indicates automatic voice region detection.
@@ -2791,7 +2813,7 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
         *,
         name: Optional[str] = None,
         position: int = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
     ) -> CategoryChannel:
         """|coro|
@@ -2815,9 +2837,13 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
             The name of the new channel. If not provided, defaults to this channel's name.
         position: :class:`int`
             The position of the new channel. If not provided, defaults to this channel's position.
-        overwrites: :class:`Mapping`
-            A :class:`Mapping` of target (either a role or a member) to :class:`PermissionOverwrite`
-            to apply to the channel. If not provided, defaults to this channel's overwrites.
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
+            A :class:`Mapping` of target (either a role or a member) to
+            :class:`PermissionOverwrite` to apply to the channel.
+            If not provided, defaults to this channel's overwrites.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         reason: Optional[:class:`str`]
             The reason for cloning this channel. Shows up on the audit log.
 
@@ -2859,7 +2885,7 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
         name: str = ...,
         position: int = ...,
         nsfw: bool = ...,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = ...,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = ...,
         flags: ChannelFlags = ...,
         reason: Optional[str] = ...,
     ) -> CategoryChannel:
@@ -2871,7 +2897,7 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
         name: str = MISSING,
         position: int = MISSING,
         nsfw: bool = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         flags: ChannelFlags = MISSING,
         reason: Optional[str] = None,
         **kwargs: Never,
@@ -2900,9 +2926,10 @@ class CategoryChannel(disnake.abc.GuildChannel, Hashable):
             The new category's position.
         nsfw: :class:`bool`
             Whether to mark the category as NSFW.
-        overwrites: :class:`Mapping`
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`Mapping` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply to the category.
+            Targets can also be :class:`.Object`\\s.
         flags: :class:`ChannelFlags`
             The new flags to set for this channel. This will overwrite any existing flags set on this channel.
 
@@ -3452,7 +3479,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         slowmode_delay: Optional[int] = ...,
         default_thread_slowmode_delay: Optional[int] = ...,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = ...,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = ...,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = ...,
         flags: ChannelFlags = ...,
         require_tag: bool = ...,
         available_tags: Sequence[ForumTag] = ...,
@@ -3475,7 +3502,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         slowmode_delay: Optional[int] = MISSING,
         default_thread_slowmode_delay: Optional[int] = MISSING,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         flags: ChannelFlags = MISSING,
         require_tag: bool = MISSING,
         available_tags: Sequence[ForumTag] = MISSING,
@@ -3523,9 +3550,12 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
 
             .. versionadded:: 2.6
 
-        overwrites: :class:`Mapping`
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`Mapping` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply to the channel.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         default_auto_archive_duration: Optional[Union[:class:`int`, :class:`ThreadArchiveDuration`]]
             The new default auto archive duration in minutes for threads created in this channel.
             Must be one of ``60``, ``1440``, ``4320``, or ``10080``.
@@ -3629,7 +3659,7 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
         default_reaction: Optional[Union[str, Emoji, PartialEmoji]] = MISSING,
         default_sort_order: Optional[ThreadSortOrder] = MISSING,
         default_layout: ThreadLayout = MISSING,
-        overwrites: Mapping[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Mapping[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
     ) -> ForumChannel:
         """|coro|
@@ -3679,9 +3709,13 @@ class ForumChannel(disnake.abc.GuildChannel, Hashable):
             The default sort order of the new channel. If not provided, defaults to this channel's default sort order.
         default_layout: :class:`ThreadLayout`
             The default layout of threads in the new channel. If not provided, defaults to this channel's default layout.
-        overwrites: :class:`Mapping`
-            A :class:`Mapping` of target (either a role or a member) to :class:`PermissionOverwrite`
-            to apply to the channel. If not provided, defaults to this channel's overwrites.
+        overwrites: Mapping[Union[:class:`Member`, :class:`Role`, :class:`Object`], :class:`PermissionOverwrite`]
+            A :class:`Mapping` of target (either a role or a member) to
+            :class:`PermissionOverwrite` to apply to the channel.
+            If not provided, defaults to this channel's overwrites.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         reason: Optional[:class:`str`]
             The reason for cloning this channel. Shows up on the audit log.
 

@@ -67,6 +67,7 @@ from .invite import Invite
 from .iterators import AuditLogIterator, BanIterator, MemberIterator
 from .member import Member, VoiceState
 from .mixins import Hashable
+from .object import Object
 from .onboarding import Onboarding
 from .partial_emoji import PartialEmoji
 from .permissions import PermissionOverwrite
@@ -1180,7 +1181,7 @@ class Guild(Hashable):
         self,
         name: str,
         channel_type: ChannelType,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         category: Optional[Snowflake] = None,
         **options: Any,
     ) -> Any:
@@ -1194,14 +1195,18 @@ class Guild(Hashable):
             if not isinstance(perm, PermissionOverwrite):
                 raise TypeError(f"Expected PermissionOverwrite received {perm.__class__.__name__}")
 
-            allow, deny = perm.pair()
-            payload = {"allow": allow.value, "deny": deny.value, "id": target.id}
-
-            if isinstance(target, Role):
-                payload["type"] = abc._Overwrites.ROLE
+            if isinstance(target, Role) or (isinstance(target, Object) and target.type is Role):
+                _type = abc._Overwrites.ROLE
             else:
-                payload["type"] = abc._Overwrites.MEMBER
+                _type = abc._Overwrites.MEMBER
 
+            allow, deny = perm.pair()
+            payload: PermissionOverwritePayload = {
+                "allow": str(allow.value),
+                "deny": str(deny.value),
+                "id": target.id,
+                "type": _type,
+            }
             perms.append(payload)
 
         parent_id = category.id if category else None
@@ -1227,7 +1232,7 @@ class Guild(Hashable):
         default_auto_archive_duration: AnyThreadArchiveDuration = MISSING,
         nsfw: bool = MISSING,
         news: bool = MISSING,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
     ) -> TextChannel:
         """|coro|
 
@@ -1238,7 +1243,7 @@ class Guild(Hashable):
 
         The ``overwrites`` parameter can be used to create a 'secret'
         channel upon creation. This parameter expects a :class:`dict` of
-        overwrites with the target (either a :class:`Member` or a :class:`Role`)
+        overwrites with the target (a :class:`Member`, :class:`Role`, or :class:`Object`)
         as the key and a :class:`PermissionOverwrite` as the value.
 
         .. note::
@@ -1273,10 +1278,13 @@ class Guild(Hashable):
         ----------
         name: :class:`str`
             The channel's name.
-        overwrites: Dict[Union[:class:`Role`, :class:`Member`], :class:`PermissionOverwrite`]
+        overwrites: Dict[Union[:class:`Role`, :class:`Member`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`dict` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply upon creation of a channel.
-            Useful for creating secret channels.
+            Useful for creating private channels.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         category: Optional[:class:`CategoryChannel`]
             The category to place the newly created channel under.
             The permissions will be automatically synced to category if no
@@ -1381,7 +1389,7 @@ class Guild(Hashable):
         video_quality_mode: VideoQualityMode = MISSING,
         nsfw: bool = MISSING,
         slowmode_delay: int = MISSING,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
     ) -> VoiceChannel:
         """|coro|
@@ -1395,10 +1403,13 @@ class Guild(Hashable):
         ----------
         name: :class:`str`
             The channel's name.
-        overwrites: Dict[Union[:class:`Role`, :class:`Member`], :class:`PermissionOverwrite`]
+        overwrites: Dict[Union[:class:`Role`, :class:`Member`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`dict` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply upon creation of a channel.
-            Useful for creating secret channels.
+            Useful for creating private channels.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         category: Optional[:class:`CategoryChannel`]
             The category to place the newly created channel under.
             The permissions will be automatically synced to category if no
@@ -1496,7 +1507,7 @@ class Guild(Hashable):
         user_limit: int = MISSING,
         rtc_region: Optional[Union[str, VoiceRegion]] = MISSING,
         video_quality_mode: VideoQualityMode = MISSING,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         category: Optional[CategoryChannel] = None,
         nsfw: bool = MISSING,
         slowmode_delay: int = MISSING,
@@ -1521,10 +1532,13 @@ class Guild(Hashable):
             .. versionchanged:: 2.5
                 This is no longer required to be provided.
 
-        overwrites: Dict[Union[:class:`Role`, :class:`Member`], :class:`PermissionOverwrite`]
+        overwrites: Dict[Union[:class:`Role`, :class:`Member`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`dict` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply upon creation of a channel.
-            Useful for creating secret channels.
+            Useful for creating private channels.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         category: Optional[:class:`CategoryChannel`]
             The category to place the newly created channel under.
             The permissions will be automatically synced to category if no
@@ -1624,7 +1638,7 @@ class Guild(Hashable):
         default_thread_slowmode_delay: int = MISSING,
         default_auto_archive_duration: Optional[AnyThreadArchiveDuration] = None,
         nsfw: bool = MISSING,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         available_tags: Optional[Sequence[ForumTag]] = None,
         default_reaction: Optional[Union[str, Emoji, PartialEmoji]] = None,
         default_sort_order: Optional[ThreadSortOrder] = None,
@@ -1671,10 +1685,13 @@ class Guild(Hashable):
             Must be one of ``60``, ``1440``, ``4320``, or ``10080``.
         nsfw: :class:`bool`
             Whether to mark the channel as NSFW.
-        overwrites: Dict[Union[:class:`Role`, :class:`Member`], :class:`PermissionOverwrite`]
+        overwrites: Dict[Union[:class:`Role`, :class:`Member`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`dict` of target (either a role or a member) to
             :class:`PermissionOverwrite` to apply upon creation of a channel.
-            Useful for creating secret channels.
+            Useful for creating private channels.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         available_tags: Optional[Sequence[:class:`ForumTag`]]
             The tags available for threads in this channel.
 
@@ -1767,7 +1784,7 @@ class Guild(Hashable):
         self,
         name: str,
         *,
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        overwrites: Dict[Union[Role, Member, Object], PermissionOverwrite] = MISSING,
         reason: Optional[str] = None,
         position: int = MISSING,
     ) -> CategoryChannel:
@@ -1787,9 +1804,12 @@ class Guild(Hashable):
         ----------
         name: :class:`str`
             The category's name.
-        overwrites: Dict[Union[:class:`Role`, :class:`Member`], :class:`PermissionOverwrite`]
+        overwrites: Dict[Union[:class:`Role`, :class:`Member`, :class:`Object`], :class:`PermissionOverwrite`]
             A :class:`dict` of target (either a role or a member) to
             :class:`PermissionOverwrite` which can be synced to channels.
+
+            .. versionchanged:: 2.10
+                Now supports :class:`.Object` keys.
         position: :class:`int`
             The position in the channel list. This is a number that starts
             at 0. e.g. the top channel is position 0.
