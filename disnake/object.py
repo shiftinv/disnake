@@ -71,6 +71,21 @@ class Object(Hashable):
         # TODO: default to `type(self)`?
         self.type: Optional[Type[Snowflake]] = type
 
+    # XXX: a couple future notes since this will likely only go into v3:
+    # (see https://canary.discord.com/channels/808030843078836254/1155498385802006568/1155498388683509830)
+    # - permissions_for can't support Object, since it requires full model objects;
+    #   sort of unfortunate but makes sense when you think about it
+    # - Object could be made generic, but it's not immediately clear how "no type" would be represented
+    #   (since `Object[None]` would mean `Object.type: Type[None]`)
+    # - some parts of the code now use `issubclass` instead of `isinstance`, and I'm not fully sold on that idea just yet
+    # - item no.4 in the linked thread is currently not implemented for backwards compat;
+    #   we don't need to worry about that if this gets moved to v3
+    # - similarly, item no.6 *should* probably be implemented,
+    #   since {<Role id=123>: overwrite1, <Object id=123 type=Role>: overwrite2} would otherwise
+    #   both be sent when passed to `.edit(overwrites=)`
+    # - `overwrites` parameter typing is still sort of broken since mapping keys aren't covariant;
+    #   see https://github.com/python/typing/issues/445#issuecomment-1131413084 for a possible solution
+    # - there are circular imports everywhere aaaa
     def __eq__(self, other: object) -> bool:
         # Note: this intentionally does not use `isinstance` for `self.type`,
         # mirroring the effective behavior of `EqualityComparable.__eq__`
