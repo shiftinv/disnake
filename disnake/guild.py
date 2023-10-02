@@ -80,6 +80,7 @@ from .welcome_screen import WelcomeScreen, WelcomeScreenChannel
 from .widget import Widget, WidgetSettings
 
 __all__ = (
+    "IncidentsData",
     "Guild",
     "GuildBuilder",
 )
@@ -103,6 +104,7 @@ if TYPE_CHECKING:
         CreateGuildPlaceholderRole,
         Guild as GuildPayload,
         GuildFeature,
+        IncidentsData as IncidentsDataPayload,
         MFALevel,
     )
     from .types.integration import IntegrationType
@@ -123,6 +125,47 @@ class _GuildLimit(NamedTuple):
     stickers: int
     bitrate: float
     filesize: int
+
+
+# TODO: "IncidentData"?
+class IncidentsData:
+    """TODO"""
+
+    __slots__ = ("_invites_disabled_until", "_dms_disabled_until")
+
+    def __init__(self, data: IncidentsDataPayload) -> None:
+        self._invites_disabled_until: Optional[datetime.datetime] = utils.parse_time(
+            data.get("invites_disabled_until")
+        )
+        self._dms_disabled_until: Optional[datetime.datetime] = utils.parse_time(
+            data.get("dms_disabled_until")
+        )
+
+    @property
+    def invites_disabled_until(self) -> Optional[datetime.datetime]:
+        """TODO"""
+        if (
+            self._invites_disabled_until is not None
+            and self._invites_disabled_until < utils.utcnow()
+        ):
+            self._invites_disabled_until = None
+
+        return self._invites_disabled_until
+
+    @property
+    def dms_disabled_until(self) -> Optional[datetime.datetime]:
+        """TODO"""
+        if self._dms_disabled_until is not None and self._dms_disabled_until < utils.utcnow():
+            self._dms_disabled_until = None
+
+        return self._dms_disabled_until
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, IncidentsData)
+            and self.invites_disabled_until == other.invites_disabled_until
+            and self.dms_disabled_until == other.dms_disabled_until
+        )
 
 
 class Guild(Hashable):
@@ -304,6 +347,11 @@ class Guild(Hashable):
         To get a full :class:`Invite` object, see :attr:`Guild.vanity_invite`.
 
         .. versionadded:: 2.5
+
+    incidents_data: Optional[:class:`IncidentsData`]
+        # TODO
+
+        .. versionadded:: 2.10
     """
 
     __slots__ = (
@@ -335,6 +383,7 @@ class Guild(Hashable):
         "widget_enabled",
         "widget_channel_id",
         "vanity_url_code",
+        "incidents_data",
         "_members",
         "_channels",
         "_icon",
@@ -577,6 +626,12 @@ class Guild(Hashable):
         self.vanity_url_code: Optional[str] = guild.get("vanity_url_code")
         self._safety_alerts_channel_id: Optional[int] = utils._get_as_snowflake(
             guild, "safety_alerts_channel_id"
+        )
+        # TODO: only store if at least one valid value?
+        self.incidents_data: Optional[IncidentsData] = (
+            IncidentsData(incidents_data)
+            if (incidents_data := guild.get("incidents_data"))
+            else None
         )
 
         stage_instances = guild.get("stage_instances")
