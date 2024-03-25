@@ -17,6 +17,90 @@ in specific versions. Please see :ref:`version_guarantees` for more information.
 
 .. towncrier release notes start
 
+.. _vp2p3p4:
+
+v2.3.4
+------
+
+Deprecations
+~~~~~~~~~~~~
+- :meth:`Client.fetch_premium_sticker_packs` was renamed to :meth:`Client.fetch_sticker_packs`; the old name is deprecated. (:issue:`1082`)
+
+New Features
+~~~~~~~~~~~~
+- Support activity assets with ``mp:`` prefix in :attr:`Activity.large_image_url` and :attr:`Activity.small_image_url`, now returning the correct url. (:issue:`687`)
+- Move asset properties from :class:`Activity` to all activity types: :attr:`~Game.large_image_url`, :attr:`~Game.small_image_url`, :attr:`~Game.large_image_text`, :attr:`~Game.small_image_text`. (:issue:`687`)
+- |commands| Skip evaluating annotations of ``self`` (if present) and ``ctx`` parameters in prefix commands. These may now use stringified annotations with types that aren't available at runtime. (:issue:`847`)
+- Add ``guild_scheduled_event`` parameter to :meth:`StageChannel.create_instance`. (:issue:`882`)
+- Added ``with_counts`` parameter to :meth:`Client.fetch_guild` and :meth:`Client.fetch_guilds`, used to determine whether to include the guild's member count and presence information. (:issue:`892`)
+- Move the event listener system implementation from :class:`.ext.commands.Bot` to :class:`.Client`, making Clients able to have more than one listener per event type. (:issue:`975`)
+- Add ``delete_after`` parameter to :meth:`Interaction.edit_original_response`, :meth:`InteractionResponse.edit_message` and :meth:`InteractionMessage.edit`. (:issue:`1014`)
+- Make :class:`Interaction` and subtypes accept the bot type as a generic parameter to denote the type returned by the :attr:`~Interaction.bot` and :attr:`~Interaction.client` properties. (:issue:`1036`, :issue:`1121`)
+- |commands| Implement :func:`~disnake.ext.commands.app_check` and :func:`~disnake.ext.commands.app_check_any` decorators. (:issue:`1045`)
+- |commands| Log errors raised by :meth:`.ext.commands.Cog.cog_unload`. (:issue:`1046`)
+- Add support for media channels. (:issue:`1050`)
+    - Add :class:`MediaChannel`.
+        - Unless otherwise noted, media channels behave just like forum channels.
+    - Add :attr:`ChannelType.media`.
+    - Add :attr:`CategoryChannel.media_channels`, :attr:`Guild.media_channels`.
+    - Add :attr:`CategoryChannel.create_media_channel`, :attr:`Guild.create_media_channel`.
+    - Add :attr:`ChannelFlags.hide_media_download_options`.
+- Add :class:`RoleFlags` type and :attr:`Role.flags`. (:issue:`1069`)
+- Add :class:`AttachmentFlags` type and :attr:`Attachment.flags`. (:issue:`1073`)
+- Add support for threads in :meth:`Webhook.fetch_message`, :meth:`~Webhook.edit_message`, and :meth:`~Webhook.delete_message`, as well as their sync counterparts. (:issue:`1077`)
+- Add ``default_layout`` parameter to :meth:`Guild.create_forum_channel` and :meth:`ForumChannel.clone`. (:issue:`1078`)
+- Add :attr:`RawReactionActionEvent.message_author_id`. (:issue:`1079`)
+- Add :class:`AuditLogAction` values related to creator monetization. (:issue:`1080`)
+- Add ``applied_tags`` parameter to :meth:`Webhook.send`. (:issue:`1085`)
+- Make :attr:`CustomActivity.state` fall back to the provided :attr:`~CustomActivity.name`, simplifying setting a custom status. (:issue:`1087`)
+- Add :attr:`Permissions.create_guild_expressions` and :attr:`Permissions.create_events`. (:issue:`1091`)
+- |commands| Update :meth:`Bot.is_owner <ext.commands.Bot.is_owner>` to take team member roles into account. (:issue:`1094`)
+- Add :attr:`TeamMember.role`. (:issue:`1094`)
+- Add ``created_at`` property to :attr:`AutoModRule <AutoModRule.created_at>`, :attr:`ForumTag <ForumTag.created_at>`, :attr:`Integration <Integration.created_at>`, :attr:`StageInstance <StageInstance.created_at>`, and :attr:`Team <Team.created_at>`. (:issue:`1095`)
+- Support ``integration_type`` field in :attr:`AuditLogEntry.extra` (for :attr:`~AuditLogAction.kick` and :attr:`~AuditLogAction.member_role_update` actions). (:issue:`1096`)
+- Add new :class:`Colour`\s: :meth:`~Colour.light_embed` and :meth:`~Colour.dark_embed`. (:issue:`1102`)
+- Support application subscriptions (see the :ddocs:`official docs <monetization/overview>` for more info). (:issue:`1113`)
+    - New types: :class:`SKU`, :class:`Entitlement`.
+    - New :attr:`Interaction.entitlements` attribute, and :meth:`InteractionResponse.require_premium` response type.
+    - New events: :func:`on_entitlement_create`, :func:`on_entitlement_update`, :func:`on_entitlement_delete`.
+    - New :class:`Client` methods: :meth:`~Client.skus`, :meth:`~Client.entitlements`, :meth:`~Client.create_entitlement`.
+- Support Python 3.12. (:issue:`1117`, :issue:`1128`, :issue:`1135`)
+- |commands| Support Python 3.12's ``type`` statement and :class:`py:typing.TypeAliasType` annotations in command signatures. (:issue:`1128`)
+- Make typing more precise for :meth:`Client.create_global_command`, :meth:`Client.edit_global_command`, :meth:`Client.create_guild_command` and :meth:`Client.edit_guild_command`. (:issue:`1151`)
+- Add raw equivalent of :func:`on_presence_update` - :func:`on_raw_presence_update`. (:issue:`1152`)
+
+Bug Fixes
+~~~~~~~~~
+- |commands| Fix incorrect typings of :meth:`InvokableApplicationCommand.add_check <.ext.commands.InvokableApplicationCommand.add_check>`, :meth:`InvokableApplicationCommand.remove_check <.ext.commands.InvokableApplicationCommand.remove_check>`, :meth:`Bot.add_app_command_check <.ext.commands.Bot.add_app_command_check>` and :meth:`Bot.remove_app_command_check <.ext.commands.Bot.remove_app_command_check>`. (:issue:`1045`)
+- Update :meth:`Colour.dark_theme` to match Discord theme change. (:issue:`1102`)
+- Allow ``cls`` argument in select menu decorators (e.g. :func:`ui.string_select`) to be specified by keyword instead of being positional-only. (:issue:`1111`)
+- |commands| Fix edge case in evaluation of multiple identical annotations with forwardrefs in a single signature. (:issue:`1120`)
+- Fix :meth:`Thread.permissions_for` not working in some cases due to an incorrect import. (:issue:`1123`)
+- |commands| Fix erroneous :class:`LocalizationWarning`\s when using localized slash command parameters in cogs. (:issue:`1133`)
+- Update ``choices`` type in app commands to accept any :class:`~py:typing.Sequence` or :class:`~py:typing.Mapping`, instead of the more constrained :class:`list`/:class:`dict` types. (:issue:`1136`)
+- Handle unexpected ``RECONNECT`` opcode where ``HELLO`` is expected during initial shard connection. (:issue:`1155`)
+- Reconnect gateway websocket on protocol errors. (:issue:`1159`)
+- Adjust type annotations to allow :class:`Object` as ``category`` parameter in :meth:`Guild.create_text_channel` and similar methods. (:issue:`1162`)
+- Avoid ``AttributeError`` in :class:`FFmpegAudio` when cleaning up after failing to spawn ffmpeg process. (:issue:`1164`)
+
+Documentation
+~~~~~~~~~~~~~
+- Add inherited attributes to :class:`TeamMember`, and fix :attr:`TeamMember.avatar` documentation. (:issue:`1094`)
+- Miscellaneous grammar/typo fixes for :doc:`api/audit_logs`. (:issue:`1105`)
+- Document the :class:`.Option` attributes, the ``description`` and ``options`` properties for :class:`.ext.commands.InvokableSlashCommand` and the ``description`` and ``body`` properties for :class:`.ext.commands.SubCommand`. (:issue:`1112`)
+- Make all "Supported Operations" container elements collapsible. (:issue:`1126`)
+- Adding some clarifying documentation around the executable parameters of audio classes based off of internal discussions. (:issue:`1158`)
+
+Miscellaneous
+~~~~~~~~~~~~~
+- Update the ``python -m disnake newcog`` template to include all missing special methods. (:issue:`808`)
+- Overhaul and simplify `contribution guide <https://github.com/DisnakeDev/disnake/tree/master/CONTRIBUTING.md>`__. (:issue:`1098`)
+- |commands| Rewrite slash command signature evaluation to use the same mechanism as prefix command signatures. This should not have an impact on user code, but streamlines future changes. (:issue:`1116`)
+- Start testing with Python 3.12 in CI. (:issue:`1117`)
+- Add :class:`StandardSticker` to ``stickers`` parameter type annotation of :meth:`Messageable.send` and :meth:`ForumChannel.create_thread`. (:issue:`1134`)
+- Reduce the amount of unknown (unresolved) types in public-facing APIs. (:issue:`1167`)
+
+
 .. _vp2p9p1:
 
 v2.9.1
