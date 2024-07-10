@@ -931,6 +931,7 @@ class Message(Hashable):
         "stickers",
         "components",
         "guild",
+        "_message_snapshots",
         "_edited_timestamp",
         "_role_subscription_data",
     )
@@ -1028,6 +1029,25 @@ class Message(Hashable):
 
                     # the channel will be the correct type here
                     ref.resolved = self.__class__(channel=chan, data=resolved, state=state)  # type: ignore
+
+        self._message_snapshots: List[MessagePayload] = []
+        for snapshot in data.get("message_snapshots") or []:
+            snap_msg = snapshot["message"]
+            # build fake message object - since I'm only doing this for moderation purposes,
+            # inherit all fields like id/author from parent message, and only copy content fields
+            fake_message_data = data.copy()
+
+            # remove to prevent recursion
+            fake_message_data.pop("message_snapshots", None)
+            fake_message_data.pop("message_reference", None)
+
+            # copy content fields
+            fake_message_data["content"] = snap_msg["content"]
+            fake_message_data["embeds"] = snap_msg.get("embeds", [])
+            fake_message_data["attachments"] = snap_msg.get("attachments", [])
+            fake_message_data["components"] = snap_msg.get("components", [])
+
+            self._message_snapshots.append(fake_message_data)
 
         for handler in ("author", "member", "mentions", "mention_roles"):
             try:

@@ -114,10 +114,25 @@ class Message(TypedDict):
     sticker_items: NotRequired[List[StickerItem]]
     position: NotRequired[int]
     role_subscription_data: NotRequired[RoleSubscriptionData]
+    message_snapshots: NotRequired[List[MessageSnapshot]]
 
     # specific to MESSAGE_CREATE/MESSAGE_UPDATE events
     guild_id: NotRequired[Snowflake]
     member: NotRequired[Member]
+
+
+class MessageSnapshot(TypedDict):
+    message: MessageSnapshotData
+    guild_id: NotRequired[Snowflake]
+
+
+class MessageSnapshotData(TypedDict):
+    content: str
+    embeds: List[Embed]
+    attachments: List[Attachment]
+    timestamp: str
+    edited_timestamp: Optional[str]
+    flags: NotRequired[int]
 
 
 AllowedMentionType = Literal["roles", "users", "everyone"]
