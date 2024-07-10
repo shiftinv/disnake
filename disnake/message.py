@@ -973,6 +973,7 @@ class Message(Hashable):
         "guild",
         "poll",
         "_message_snapshots",
+        "_interaction_user_id",
         "_edited_timestamp",
         "_role_subscription_data",
     )
@@ -1093,6 +1094,14 @@ class Message(Hashable):
             fake_message_data["components"] = snap_msg.get("components", [])
 
             self._message_snapshots.append(fake_message_data)
+
+        # extract invoking interaction user
+        # (this would generally match `self.interaction.user.id`,
+        # but the new field also supports followups)
+        self._interaction_user_id: Optional[int] = utils._get_as_snowflake(
+            data.get("interaction_metadata", {}).get("user", {}),
+            "id",
+        )
 
         for handler in ("author", "member", "mentions", "mention_roles"):
             try:
