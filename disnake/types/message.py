@@ -119,10 +119,25 @@ class Message(TypedDict):
     poll: NotRequired[Poll]
     # contains resolved objects for `default_values` of select menus in this message; we currently don't have a use for this
     resolved: NotRequired[InteractionDataResolved]
+    message_snapshots: NotRequired[List[MessageSnapshot]]
 
     # specific to MESSAGE_CREATE/MESSAGE_UPDATE events
     guild_id: NotRequired[Snowflake]
     member: NotRequired[Member]
+
+
+class MessageSnapshot(TypedDict):
+    message: MessageSnapshotData
+    guild_id: NotRequired[Snowflake]
+
+
+class MessageSnapshotData(TypedDict):
+    content: str
+    embeds: List[Embed]
+    attachments: List[Attachment]
+    timestamp: str
+    edited_timestamp: Optional[str]
+    flags: NotRequired[int]
 
 
 AllowedMentionType = Literal["roles", "users", "everyone"]
