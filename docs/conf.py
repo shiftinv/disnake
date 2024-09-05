@@ -490,3 +490,8 @@ def setup(app: Sphinx) -> None:
     import disnake
 
     del disnake.Embed.Empty  # type: ignore
+
+    import pprint
+    import types
+
+    pprint.pprint({k: v for k, v in globals().items() if not isinstance(v, types.ModuleType)})
