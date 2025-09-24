@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar, Union
 
 if TYPE_CHECKING:
     from disnake import ApplicationCommandInteraction
@@ -12,6 +12,10 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
+
+CogT = TypeVar("CogT", bound="Optional[Cog]")
+ContextT = TypeVar("ContextT", bound="Context[Any]")
+CommandInteractionT = TypeVar("CommandInteractionT", bound="ApplicationCommandInteraction[Any]")
 
 Coro = Coroutine[Any, Any, T]
 MaybeCoro = Union[T, Coro[T]]
@@ -25,9 +29,15 @@ AppCheck = Union[
     Callable[["ApplicationCommandInteraction"], MaybeCoro[bool]],
 ]
 Hook = Union[Callable[["Cog", "Context[Any]"], Coro[Any]], Callable[["Context[Any]"], Coro[Any]]]
+
+CommandErrorT = TypeVar("CommandErrorT", bound="CommandError")
 Error = Union[
-    Callable[["Cog", "Context[Any]", "CommandError"], Coro[Any]],
-    Callable[["Context[Any]", "CommandError"], Coro[Any]],
+    Callable[[CogT, ContextT, CommandErrorT], Coro[Any]],
+    Callable[[ContextT, CommandErrorT], Coro[Any]],
+]
+AppError = Union[
+    Callable[[CogT, CommandInteractionT, CommandErrorT], Coro[Any]],
+    Callable[[CommandInteractionT, CommandErrorT], Coro[Any]],
 ]
 
 

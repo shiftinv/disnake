@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
     from disnake.interactions import ApplicationCommandInteraction
 
-    from ._types import AppCheck, Coro, Error, Hook
+    from ._types import AppCheck, AppError, CommandErrorT, CommandInteractionT, Coro, Hook
     from .cog import Cog
     from .interaction_bot_base import InteractionBotBase
 
@@ -69,7 +69,6 @@ T = TypeVar("T")
 AppCommandT = TypeVar("AppCommandT", bound="InvokableApplicationCommand")
 CogT = TypeVar("CogT", bound="Cog")
 HookT = TypeVar("HookT", bound="Hook")
-ErrorT = TypeVar("ErrorT", bound="Error")
 
 
 def _get_overridden_method(method):
@@ -477,7 +476,9 @@ class InvokableApplicationCommand(ABC):
 
             await self.call_after_hooks(inter)
 
-    def error(self, coro: ErrorT) -> ErrorT:
+    def error(
+        self, coro: AppError[CogT, CommandInteractionT, CommandErrorT]
+    ) -> AppError[CogT, CommandInteractionT, CommandErrorT]:
         """A decorator that registers a coroutine as a local error handler.
 
         A local error handler is an error event limited to a single application command.
@@ -496,7 +497,7 @@ class InvokableApplicationCommand(ABC):
             msg = "The error handler must be a coroutine."
             raise TypeError(msg)
 
-        self.on_error: Error = coro
+        self.on_error: AppError = coro
         return coro
 
     def has_error_handler(self) -> bool:

@@ -68,7 +68,7 @@ if TYPE_CHECKING:
 
     from disnake.message import Message
 
-    from ._types import AppCheck, Check, Coro, CoroFunc, Error, Hook
+    from ._types import AppCheck, Check, CogT, CommandErrorT, ContextT, Coro, CoroFunc, Error, Hook
 
 
 __all__ = (
@@ -104,12 +104,9 @@ MISSING: Any = disnake.utils.MISSING
 
 T = TypeVar("T")
 VT = TypeVar("VT")
-CogT = TypeVar("CogT", bound="Optional[Cog]")
 CommandT = TypeVar("CommandT", bound="Command")
-ContextT = TypeVar("ContextT", bound="Context")
 GroupT = TypeVar("GroupT", bound="Group")
 HookT = TypeVar("HookT", bound="Hook")
-ErrorT = TypeVar("ErrorT", bound="Error")
 
 
 if TYPE_CHECKING:
@@ -881,7 +878,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             if call_hooks:
                 await self.call_after_hooks(ctx)
 
-    def error(self, coro: ErrorT) -> ErrorT:
+    def error(
+        self, coro: Error[CogT, ContextT, CommandErrorT]
+    ) -> Error[CogT, ContextT, CommandErrorT]:
         """A decorator that registers a coroutine as a local error handler.
 
         A local error handler is an :func:`.on_command_error` event limited to
