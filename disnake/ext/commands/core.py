@@ -338,7 +338,8 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         except AttributeError:
             checks = kwargs.get("checks", [])
 
-        self.checks: List[CheckInput] = checks
+        # n.b. may be a subtype of Context, but this is handled correctly nonetheless
+        self.checks: List[CheckInput[Context[Any]]] = checks
 
         try:
             cooldown = func.__commands_cooldown__
@@ -410,7 +411,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 raise TypeError(msg)
         self.params = params
 
-    def add_check(self, func: CheckInput) -> None:
+    def add_check(self, func: CheckInput[ContextT]) -> None:
         """Adds a check to the command.
 
         This is the non-decorator interface to :func:`.check`.
@@ -422,9 +423,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         func
             The function that will be used as a check.
         """
-        self.checks.append(func)
+        self.checks.append(func)  # pyright: ignore[reportArgumentType]
 
-    def remove_check(self, func: CheckInput) -> None:
+    def remove_check(self, func: CheckInput[ContextT]) -> None:
         """Removes a check from the command.
 
         This function is idempotent and will not raise an exception
@@ -438,7 +439,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             The function to remove from the checks.
         """
         try:
-            self.checks.remove(func)
+            self.checks.remove(func)  # pyright: ignore[reportArgumentType]
         except ValueError:
             pass
 
@@ -1681,7 +1682,7 @@ def group(
     return command(name=name, cls=cls, **attrs)
 
 
-def check(predicate: CheckInput) -> CheckDecorator:
+def check(predicate: CheckInput[ContextT]) -> CheckDecorator[ContextT]:
     """A decorator that adds a check to the :class:`.Command` or its
     subclasses. These checks could be accessed via :attr:`.Command.checks`.
 
@@ -1758,7 +1759,7 @@ def check(predicate: CheckInput) -> CheckDecorator:
         func: Union[Command[Any, ..., Any], CoroFunc],
     ) -> Union[Command[Any, ..., Any], CoroFunc]:
         if hasattr(func, "__command_flag__"):
-            func.checks.append(predicate)
+            func.add_check(predicate)
         else:
             if not hasattr(func, "__commands_checks__"):
                 func.__commands_checks__ = []  # type: ignore
@@ -1780,7 +1781,7 @@ def check(predicate: CheckInput) -> CheckDecorator:
     return decorator  # type: ignore
 
 
-def check_any(*checks: CheckDecorator) -> CheckDecorator:
+def check_any(*checks: CheckDecorator[ContextT]) -> CheckDecorator[ContextT]:
     """A :func:`check` that is added that checks if any of the checks passed
     will pass, i.e. using logical OR.
 
@@ -1825,7 +1826,7 @@ def check_any(*checks: CheckDecorator) -> CheckDecorator:
         async def only_for_owners(ctx):
             await ctx.send('Hello mister owner!')
     """
-    unwrapped: List[CheckPredicate] = []
+    unwrapped: List[CheckPredicate[ContextT]] = []
     for wrapped in checks:
         try:
             pred = wrapped.predicate
@@ -1835,7 +1836,7 @@ def check_any(*checks: CheckDecorator) -> CheckDecorator:
         else:
             unwrapped.append(pred)
 
-    async def predicate(ctx: AnyContext) -> bool:
+    async def predicate(ctx: ContextT) -> bool:
         errors = []
         for func in unwrapped:
             try:
@@ -1892,7 +1893,7 @@ def app_check_any(*checks: AppCheck) -> Callable[[T], T]:
         raise TypeError(msg) from None
 
 
-def has_role(item: Union[int, str]) -> CheckDecorator:
+def has_role(item: Union[int, str]) -> CheckDecorator[ContextT]:
     """A :func:`.check` that is added that checks if the member invoking the
     command has the role specified via the name or ID specified.
 

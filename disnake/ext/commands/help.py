@@ -33,7 +33,7 @@ from .errors import CommandError
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from ._types import CheckInput, FuncT, MaybeCoro
+    from ._types import CheckInput, ContextT, FuncT, MaybeCoro
     from .bot import AutoShardedBot, Bot
     from .bot_base import BotBase
     from .cog import Cog
@@ -356,7 +356,7 @@ class HelpCommand:
         bot.remove_command(self._command_impl.name)
         self._command_impl._eject_cog()
 
-    def add_check(self, func: CheckInput) -> None:
+    def add_check(self, func: CheckInput[ContextT]) -> None:
         """Adds a check to the help command.
 
         .. versionadded:: 1.4
@@ -368,7 +368,7 @@ class HelpCommand:
         """
         self._command_impl.add_check(func)
 
-    def remove_check(self, func: CheckInput) -> None:
+    def remove_check(self, func: CheckInput[ContextT]) -> None:
         """Removes a check from the help command.
 
         This function is idempotent and will not raise an exception if

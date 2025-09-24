@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from disnake.message import Message
 
-    from ._types import CheckInput, CoroFunc, MaybeCoro
+    from ._types import CheckInput, ContextT, CoroFunc, MaybeCoro
 
 __all__ = (
     "when_mentioned",
@@ -153,8 +153,8 @@ class BotBase(CommonBotBase, GroupMixin):
 
         self.command_prefix = command_prefix
 
-        self._checks: List[CheckInput] = []
-        self._check_once: List[CheckInput] = []
+        self._checks: List[CheckInput[Context[Any]]] = []
+        self._check_once: List[CheckInput[Context[Any]]] = []
 
         self._before_invoke: Optional[CoroFunc] = None
         self._after_invoke: Optional[CoroFunc] = None
@@ -202,7 +202,7 @@ class BotBase(CommonBotBase, GroupMixin):
 
     def add_check(
         self,
-        func: CheckInput,
+        func: CheckInput[ContextT],
         *,
         call_once: bool = False,
     ) -> None:
@@ -220,14 +220,12 @@ class BotBase(CommonBotBase, GroupMixin):
             If the function should only be called once per
             :meth:`.invoke` call.
         """
-        if call_once:
-            self._check_once.append(func)
-        else:
-            self._checks.append(func)
+        check_list = self._check_once if call_once else self._checks
+        check_list.append(func)  # pyright: ignore[reportArgumentType]
 
     def remove_check(
         self,
-        func: CheckInput,
+        func: CheckInput[ContextT],
         *,
         call_once: bool = False,
     ) -> None:
@@ -248,7 +246,7 @@ class BotBase(CommonBotBase, GroupMixin):
         """
         check_list = self._check_once if call_once else self._checks
         try:
-            check_list.remove(func)
+            check_list.remove(func)  # pyright: ignore[reportArgumentType]
         except ValueError:
             pass
 
@@ -326,7 +324,6 @@ class BotBase(CommonBotBase, GroupMixin):
         if len(data) == 0:
             return True
 
-        # type-checker doesn't distinguish between functions and methods
         return await disnake.utils.async_all(f(ctx) for f in data)
 
     # TODO: update these types too

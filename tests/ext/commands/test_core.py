@@ -80,9 +80,12 @@ class TestCheckErrorHook:
     def _typing_decorator_bot(self) -> None:
         bot = commands.Bot()
 
+        @commands.has_role(123)
         @bot.command()
         @commands.check(check)
         async def info(ctx: CustomContext, *, member: disnake.Member) -> None: ...
+
+        info.add_check(check)
 
         # @error
 
@@ -104,9 +107,12 @@ class TestCheckErrorHook:
 
     def _typing_decorator_cog(self) -> None:
         class CustomCog(commands.Cog):
+            @commands.has_role(123)
             @commands.command()
             @commands.check(check)
             async def info(self, ctx: CustomContext, *, member: disnake.Member) -> None: ...
+
+            info.add_check(check)
 
             # @error
 

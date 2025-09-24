@@ -23,14 +23,14 @@ Coro = Coroutine[Any, Any, T]
 MaybeCoro = Union[T, Coro[T]]
 CoroFunc = Callable[..., Coro[Any]]
 
-CheckInput = Callable[["Context[Any]"], MaybeCoro[bool]]
+CheckInput = Callable[[ContextT], MaybeCoro[bool]]
 # similar to `CheckInput`, but always returns a coroutine
-CheckPredicate = Callable[[Context[Any]], Coro[bool]]
+CheckPredicate = Callable[[ContextT], Coro[bool]]
 CommandT = TypeVar("CommandT", bound="Union[Command[Any, ..., Any], CoroFunc]")
 
 
-class CheckDecorator(Protocol):
-    predicate: CheckPredicate
+class CheckDecorator(Protocol[ContextT]):
+    predicate: CheckPredicate[ContextT]
 
     def __call__(self, func: CommandT) -> CommandT: ...
 
