@@ -72,7 +72,7 @@ class TestDecorators:
             assert_type(gd(f), CustomGroup)
 
 
-class TestCheckErrorDecorator:
+class TestCheckErrorHook:
     def _typing_decorator_bot(self) -> None:
         bot = commands.Bot()
 
@@ -81,6 +81,9 @@ class TestCheckErrorDecorator:
 
         @info.error
         async def info_error(ctx: CustomContext, error: commands.CommandError) -> None: ...
+
+        @info.error  # type: ignore  # xfail
+        async def info_error2(ctx: int, error: commands.CommandError) -> None: ...
 
         assert_type(
             info_error,
@@ -96,6 +99,9 @@ class TestCheckErrorDecorator:
             async def info_error(
                 self, ctx: CustomContext, error: commands.CommandError
             ) -> None: ...
+
+            @info.error  # type: ignore  # xfail
+            async def info_error2(self, ctx: int, error: commands.CommandError) -> None: ...
 
         assert_type(
             CustomCog.info_error,
