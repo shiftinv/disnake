@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from disnake.message import Message
 
-    from ._types import Check, CoroFunc, MaybeCoro
+    from ._types import CheckInput, CoroFunc, MaybeCoro
 
 __all__ = (
     "when_mentioned",
@@ -40,6 +40,8 @@ MISSING: Any = disnake.utils.MISSING
 T = TypeVar("T")
 CFT = TypeVar("CFT", bound="CoroFunc")
 CXT = TypeVar("CXT", bound="Context")
+
+CheckT = TypeVar("CheckT", bound="CheckInput")
 
 PrefixType = Union[str, Iterable[str]]
 
@@ -151,8 +153,8 @@ class BotBase(CommonBotBase, GroupMixin):
 
         self.command_prefix = command_prefix
 
-        self._checks: List[Check] = []
-        self._check_once: List[Check] = []
+        self._checks: List[CheckInput] = []
+        self._check_once: List[CheckInput] = []
 
         self._before_invoke: Optional[CoroFunc] = None
         self._after_invoke: Optional[CoroFunc] = None
@@ -200,7 +202,7 @@ class BotBase(CommonBotBase, GroupMixin):
 
     def add_check(
         self,
-        func: Check,
+        func: CheckInput,
         *,
         call_once: bool = False,
     ) -> None:
@@ -225,7 +227,7 @@ class BotBase(CommonBotBase, GroupMixin):
 
     def remove_check(
         self,
-        func: Check,
+        func: CheckInput,
         *,
         call_once: bool = False,
     ) -> None:
@@ -250,7 +252,7 @@ class BotBase(CommonBotBase, GroupMixin):
         except ValueError:
             pass
 
-    def check(self, func: T) -> T:
+    def check(self, func: CheckT) -> CheckT:
         """A decorator that adds a global check to the bot.
 
         This is for text commands only, and doesn't apply to application commands.
@@ -276,11 +278,10 @@ class BotBase(CommonBotBase, GroupMixin):
                 return ctx.command.qualified_name in allowed_commands
 
         """
-        # T was used instead of Check to ensure the type matches on return
-        self.add_check(func)  # type: ignore
+        self.add_check(func)
         return func
 
-    def check_once(self, func: CFT) -> CFT:
+    def check_once(self, func: CheckT) -> CheckT:
         """A decorator that adds a "call once" global check to the bot.
 
         This is for text commands only, and doesn't apply to application commands.
@@ -326,8 +327,9 @@ class BotBase(CommonBotBase, GroupMixin):
             return True
 
         # type-checker doesn't distinguish between functions and methods
-        return await disnake.utils.async_all(f(ctx) for f in data)  # type: ignore
+        return await disnake.utils.async_all(f(ctx) for f in data)
 
+    # TODO: update these types too
     def before_invoke(self, coro: CFT) -> CFT:
         """A decorator that registers a coroutine as a pre-invoke hook.
 

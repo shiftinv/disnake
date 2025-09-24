@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from disnake.errors import ClientException, DiscordException
 from disnake.utils import humanize_list
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from disnake.threads import Thread
     from disnake.types.snowflake import Snowflake, SnowflakeList
 
-    from .context import AnyContext
+    from ._types import CheckPredicate
     from .cooldowns import BucketType, Cooldown
     from .flag_converter import Flag
 
@@ -200,17 +200,15 @@ class CheckAnyFailure(CheckFailure):
 
     Attributes
     ----------
-    errors: List[:class:`CheckFailure`]
-        A list of errors that were caught during execution.
     checks: List[Callable[[Union[:class:`Context`, :class:`disnake.ApplicationCommandInteraction`]], :class:`bool`]]
         A list of check predicates that failed.
+    errors: List[:class:`CheckFailure`]
+        A list of errors that were caught during execution.
     """
 
-    def __init__(
-        self, checks: List[CheckFailure], errors: List[Callable[[AnyContext], bool]]
-    ) -> None:
-        self.checks: List[CheckFailure] = checks
-        self.errors: List[Callable[[AnyContext], bool]] = errors
+    def __init__(self, checks: List[CheckPredicate], errors: List[CheckFailure]) -> None:
+        self.checks: List[CheckPredicate] = checks
+        self.errors: List[CheckFailure] = errors
         super().__init__("You do not have permission to run this command.")
 
 

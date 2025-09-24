@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: MIT
+from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Protocol, TypeVar, Union
 
 if TYPE_CHECKING:
     from disnake import ApplicationCommandInteraction
 
     from .cog import Cog
     from .context import Context
+    from .core import Command
     from .errors import CommandError
 
 T = TypeVar("T")
@@ -21,9 +23,18 @@ Coro = Coroutine[Any, Any, T]
 MaybeCoro = Union[T, Coro[T]]
 CoroFunc = Callable[..., Coro[Any]]
 
-Check = Union[
-    Callable[["Cog", "Context[Any]"], MaybeCoro[bool]], Callable[["Context[Any]"], MaybeCoro[bool]]
-]
+CheckInput = Callable[["Context[Any]"], MaybeCoro[bool]]
+# similar to `CheckInput`, but always returns a coroutine
+CheckPredicate = Callable[[Context[Any]], Coro[bool]]
+CommandT = TypeVar("CommandT", bound="Union[Command[Any, ..., Any], CoroFunc]")
+
+
+class CheckDecorator(Protocol):
+    predicate: CheckPredicate
+
+    def __call__(self, func: CommandT) -> CommandT: ...
+
+
 AppCheck = Union[
     Callable[["Cog", "ApplicationCommandInteraction"], MaybeCoro[bool]],
     Callable[["ApplicationCommandInteraction"], MaybeCoro[bool]],

@@ -37,7 +37,7 @@ from disnake.utils import (
 
 from ._types import _BaseCommand
 from .cog import Cog
-from .context import AnyContext, Context
+from .context import Context
 from .converter import Greedy, get_converter, run_converters
 from .cooldowns import BucketType, Cooldown, CooldownMapping, DynamicCooldownMapping, MaxConcurrency
 from .errors import (
@@ -68,7 +68,23 @@ if TYPE_CHECKING:
 
     from disnake.message import Message
 
-    from ._types import AppCheck, Check, CogT, CommandErrorT, ContextT, Coro, CoroFunc, Error, Hook
+    from ._types import (
+        AppCheck,
+        CheckDecorator,
+        CheckInput,
+        CheckPredicate,
+        CogT,
+        CommandErrorT,
+        ContextT,
+        Coro,
+        CoroFunc,
+        Error,
+        Hook,
+    )
+
+
+# FIXME: temporary replacement
+AnyContext = Context[Any]
 
 
 __all__ = (
@@ -322,7 +338,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         except AttributeError:
             checks = kwargs.get("checks", [])
 
-        self.checks: List[Check] = checks
+        self.checks: List[CheckInput] = checks
 
         try:
             cooldown = func.__commands_cooldown__
@@ -394,7 +410,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 raise TypeError(msg)
         self.params = params
 
-    def add_check(self, func: Check) -> None:
+    def add_check(self, func: CheckInput) -> None:
         """Adds a check to the command.
 
         This is the non-decorator interface to :func:`.check`.
@@ -408,7 +424,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         """
         self.checks.append(func)
 
-    def remove_check(self, func: Check) -> None:
+    def remove_check(self, func: CheckInput) -> None:
         """Removes a check from the command.
 
         This function is idempotent and will not raise an exception
@@ -1136,7 +1152,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 # since we have no checks, then we just return True.
                 return True
 
-            return await disnake.utils.async_all(predicate(ctx) for predicate in predicates)  # type: ignore
+            return await disnake.utils.async_all(predicate(ctx) for predicate in predicates)
         finally:
             ctx.command = original
 
@@ -1665,7 +1681,7 @@ def group(
     return command(name=name, cls=cls, **attrs)
 
 
-def check(predicate: Check) -> Callable[[T], T]:
+def check(predicate: CheckInput) -> CheckDecorator:
     """A decorator that adds a check to the :class:`.Command` or its
     subclasses. These checks could be accessed via :attr:`.Command.checks`.
 
@@ -1755,16 +1771,16 @@ def check(predicate: Check) -> Callable[[T], T]:
         decorator.predicate = predicate
     else:
 
-        @functools.wraps(predicate)  # type: ignore
+        @functools.wraps(predicate)
         async def wrapper(ctx):
-            return predicate(ctx)  # type: ignore
+            return predicate(ctx)
 
         decorator.predicate = wrapper
 
     return decorator  # type: ignore
 
 
-def check_any(*checks: Check) -> Callable[[T], T]:
+def check_any(*checks: CheckDecorator) -> CheckDecorator:
     """A :func:`check` that is added that checks if any of the checks passed
     will pass, i.e. using logical OR.
 
@@ -1809,7 +1825,7 @@ def check_any(*checks: Check) -> Callable[[T], T]:
         async def only_for_owners(ctx):
             await ctx.send('Hello mister owner!')
     """
-    unwrapped = []
+    unwrapped: List[CheckPredicate] = []
     for wrapped in checks:
         try:
             pred = wrapped.predicate
@@ -1835,6 +1851,7 @@ def check_any(*checks: Check) -> Callable[[T], T]:
     return check(predicate)
 
 
+# TODO: return types
 def app_check(predicate: AppCheck) -> Callable[[T], T]:
     """Same as :func:`.check`, but for app commands.
 
@@ -1875,7 +1892,7 @@ def app_check_any(*checks: AppCheck) -> Callable[[T], T]:
         raise TypeError(msg) from None
 
 
-def has_role(item: Union[int, str]) -> Callable[[T], T]:
+def has_role(item: Union[int, str]) -> CheckDecorator:
     """A :func:`.check` that is added that checks if the member invoking the
     command has the role specified via the name or ID specified.
 
@@ -1918,7 +1935,7 @@ def has_role(item: Union[int, str]) -> Callable[[T], T]:
     return check(predicate)
 
 
-def has_any_role(*items: Union[int, str]) -> Callable[[T], T]:
+def has_any_role(*items: Union[int, str]) -> CheckDecorator:
     """A :func:`.check` that is added that checks if the member invoking the
     command has **any** of the roles specified. This means that if they have
     one out of the three roles specified, then this check will return `True`.
@@ -1967,7 +1984,7 @@ def has_any_role(*items: Union[int, str]) -> Callable[[T], T]:
     return check(predicate)
 
 
-def bot_has_role(item: int) -> Callable[[T], T]:
+def bot_has_role(item: int) -> CheckDecorator:
     """Similar to :func:`.has_role` except checks if the bot itself has the
     role.
 
@@ -1997,7 +2014,7 @@ def bot_has_role(item: int) -> Callable[[T], T]:
     return check(predicate)
 
 
-def bot_has_any_role(*items: int) -> Callable[[T], T]:
+def bot_has_any_role(*items: int) -> CheckDecorator:
     """Similar to :func:`.has_any_role` except checks if the bot itself has
     any of the roles listed.
 
@@ -2090,16 +2107,16 @@ def has_permissions(
     view_channel: bool = ...,
     view_creator_monetization_analytics: bool = ...,
     view_guild_insights: bool = ...,
-) -> Callable[[T], T]: ...
+) -> CheckDecorator: ...
 
 
 @overload
 @_generated
-def has_permissions() -> Callable[[T], T]: ...
+def has_permissions() -> CheckDecorator: ...
 
 
 @_overload_with_permissions
-def has_permissions(**perms: bool) -> Callable[[T], T]:
+def has_permissions(**perms: bool) -> CheckDecorator:
     """A :func:`.check` that is added that checks if the member has all of
     the permissions necessary.
 
@@ -2216,16 +2233,16 @@ def bot_has_permissions(
     view_channel: bool = ...,
     view_creator_monetization_analytics: bool = ...,
     view_guild_insights: bool = ...,
-) -> Callable[[T], T]: ...
+) -> CheckDecorator: ...
 
 
 @overload
 @_generated
-def bot_has_permissions() -> Callable[[T], T]: ...
+def bot_has_permissions() -> CheckDecorator: ...
 
 
 @_overload_with_permissions
-def bot_has_permissions(**perms: bool) -> Callable[[T], T]:
+def bot_has_permissions(**perms: bool) -> CheckDecorator:
     """Similar to :func:`.has_permissions` except checks if the bot itself has
     the permissions listed.
 
@@ -2320,16 +2337,16 @@ def has_guild_permissions(
     view_channel: bool = ...,
     view_creator_monetization_analytics: bool = ...,
     view_guild_insights: bool = ...,
-) -> Callable[[T], T]: ...
+) -> CheckDecorator: ...
 
 
 @overload
 @_generated
-def has_guild_permissions() -> Callable[[T], T]: ...
+def has_guild_permissions() -> CheckDecorator: ...
 
 
 @_overload_with_permissions
-def has_guild_permissions(**perms: bool) -> Callable[[T], T]:
+def has_guild_permissions(**perms: bool) -> CheckDecorator:
     """Similar to :func:`.has_permissions`, but operates on guild wide
     permissions instead of the current channel permissions.
 
@@ -2421,16 +2438,16 @@ def bot_has_guild_permissions(
     view_channel: bool = ...,
     view_creator_monetization_analytics: bool = ...,
     view_guild_insights: bool = ...,
-) -> Callable[[T], T]: ...
+) -> CheckDecorator: ...
 
 
 @overload
 @_generated
-def bot_has_guild_permissions() -> Callable[[T], T]: ...
+def bot_has_guild_permissions() -> CheckDecorator: ...
 
 
 @_overload_with_permissions
-def bot_has_guild_permissions(**perms: bool) -> Callable[[T], T]:
+def bot_has_guild_permissions(**perms: bool) -> CheckDecorator:
     """Similar to :func:`.has_guild_permissions`, but checks the bot
     members guild permissions.
 
@@ -2456,7 +2473,7 @@ def bot_has_guild_permissions(**perms: bool) -> Callable[[T], T]:
     return check(predicate)
 
 
-def dm_only() -> Callable[[T], T]:
+def dm_only() -> CheckDecorator:
     """A :func:`.check` that indicates this command must only be used in a
     DM context. Only private messages are allowed when
     using the command.
@@ -2478,7 +2495,7 @@ def dm_only() -> Callable[[T], T]:
     return check(predicate)
 
 
-def guild_only() -> Callable[[T], T]:
+def guild_only() -> CheckDecorator:
     """A :func:`.check` that indicates this command must only be used in a
     guild context only. Basically, no private messages are allowed when
     using the command.
@@ -2498,7 +2515,7 @@ def guild_only() -> Callable[[T], T]:
     return check(predicate)
 
 
-def is_owner() -> Callable[[T], T]:
+def is_owner() -> CheckDecorator:
     """A :func:`.check` that checks if the person invoking this command is the
     owner of the bot.
 
@@ -2517,7 +2534,7 @@ def is_owner() -> Callable[[T], T]:
     return check(predicate)
 
 
-def is_nsfw() -> Callable[[T], T]:
+def is_nsfw() -> CheckDecorator:
     """A :func:`.check` that checks if the channel is a NSFW channel.
 
     This check raises a special exception, :exc:`.NSFWChannelRequired`
