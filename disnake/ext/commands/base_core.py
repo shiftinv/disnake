@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
     from disnake.interactions import ApplicationCommandInteraction
 
-    from ._types import AppCheck, AppError, AppHook, CommandErrorT, CommandInteractionT, Coro
+    from ._types import AppCheckInput, AppError, AppHook, CommandErrorT, CommandInteractionT, Coro
     from .cog import Cog
     from .interaction_bot_base import InteractionBotBase
 
@@ -176,7 +176,7 @@ class InvokableApplicationCommand(ABC):
         except AttributeError:
             checks = kwargs.get("checks", [])
 
-        self.checks: List[AppCheck] = checks
+        self.checks: List[AppCheckInput[ApplicationCommandInteraction[Any]]] = checks
 
         try:
             cooldown = func.__commands_cooldown__
@@ -325,7 +325,7 @@ class InvokableApplicationCommand(ABC):
     def callback(self) -> CommandCallback:
         return self._callback
 
-    def add_check(self, func: AppCheck) -> None:
+    def add_check(self, func: AppCheckInput[CommandInteractionT]) -> None:
         """Adds a check to the application command.
 
         This is the non-decorator interface to :func:`.app_check`.
@@ -335,9 +335,9 @@ class InvokableApplicationCommand(ABC):
         func
             The function that will be used as a check.
         """
-        self.checks.append(func)
+        self.checks.append(func)  # pyright: ignore[reportArgumentType]
 
-    def remove_check(self, func: AppCheck) -> None:
+    def remove_check(self, func: AppCheckInput[CommandInteractionT]) -> None:
         """Removes a check from the application command.
 
         This function is idempotent and will not raise an exception
@@ -349,7 +349,7 @@ class InvokableApplicationCommand(ABC):
             The function to remove from the checks.
         """
         try:
-            self.checks.remove(func)
+            self.checks.remove(func)  # pyright: ignore[reportArgumentType]
         except ValueError:
             pass
 
@@ -736,7 +736,7 @@ class InvokableApplicationCommand(ABC):
                 # since we have no checks, then we just return True.
                 return True
 
-            return await async_all(predicate(inter) for predicate in predicates)  # type: ignore
+            return await async_all(predicate(inter) for predicate in predicates)
         finally:
             inter.application_command = original
 

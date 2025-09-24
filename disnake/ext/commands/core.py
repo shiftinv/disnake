@@ -69,12 +69,14 @@ if TYPE_CHECKING:
     from disnake.message import Message
 
     from ._types import (
-        AppCheck,
+        AppCheckDecorator,
+        AppCheckInput,
         CheckDecorator,
         CheckInput,
         CheckPredicate,
         CogT,
         CommandErrorT,
+        CommandInteractionT,
         ContextT,
         Coro,
         CoroFunc,
@@ -1852,21 +1854,25 @@ def check_any(*checks: CheckDecorator[ContextT]) -> CheckDecorator[ContextT]:
     return check(predicate)
 
 
-# TODO: return types
-def app_check(predicate: AppCheck) -> Callable[[T], T]:
+def app_check(
+    predicate: AppCheckInput[CommandInteractionT],
+) -> AppCheckDecorator[CommandInteractionT]:
     """Same as :func:`.check`, but for app commands.
 
     .. versionadded:: 2.10
 
     Parameters
     ----------
+    .. TODO: can also return coroutine
     predicate: Callable[[:class:`disnake.ApplicationCommandInteraction`], :class:`bool`]
         The predicate to check if the command should be invoked.
     """
     return check(predicate)  # type: ignore  # impl is the same, typings are different
 
 
-def app_check_any(*checks: AppCheck) -> Callable[[T], T]:
+def app_check_any(
+    *checks: AppCheckDecorator[CommandInteractionT],
+) -> AppCheckDecorator[CommandInteractionT]:
     """Same as :func:`.check_any`, but for app commands.
 
     .. note::

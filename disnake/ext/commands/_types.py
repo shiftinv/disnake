@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Protocol, 
 if TYPE_CHECKING:
     from disnake import ApplicationCommandInteraction
 
+    from .base_core import InvokableApplicationCommand
     from .cog import Cog
     from .context import Context
     from .core import Command
@@ -35,10 +36,18 @@ class CheckDecorator(Protocol[ContextT]):
     def __call__(self, func: CommandT) -> CommandT: ...
 
 
-AppCheck = Union[
-    Callable[["Cog", "ApplicationCommandInteraction"], MaybeCoro[bool]],
-    Callable[["ApplicationCommandInteraction"], MaybeCoro[bool]],
-]
+# TODO: there's a chance this can be merged with the above
+AppCheckInput = Callable[[CommandInteractionT], MaybeCoro[bool]]
+# similar to `AppCheckInput`, but always returns a coroutine
+AppCheckPredicate = Callable[[CommandInteractionT], Coro[bool]]
+AppCommandT = TypeVar("AppCommandT", bound="Union[InvokableApplicationCommand, CoroFunc]")
+
+
+class AppCheckDecorator(Protocol[CommandInteractionT]):
+    predicate: AppCheckPredicate[CommandInteractionT]
+
+    def __call__(self, func: AppCommandT) -> AppCommandT: ...
+
 
 Hook = Union[
     Callable[[CogT, ContextT], Coro[Any]],

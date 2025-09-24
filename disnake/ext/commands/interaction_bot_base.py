@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     )
     from disnake.permissions import Permissions
 
-    from ._types import AppCheck, CoroFunc
+    from ._types import AppCheckInput, CommandInteractionT, CoroFunc
     from .base_core import CogT, CommandCallback, InteractionCommandCallback
 
     P = ParamSpec("P")
@@ -67,6 +67,8 @@ MISSING: Any = disnake.utils.MISSING
 
 T = TypeVar("T")
 CFT = TypeVar("CFT", bound="CoroFunc")
+
+AppCheckT = TypeVar("AppCheckT", bound="AppCheckInput[Any]")
 
 
 _log = logging.getLogger(__name__)
@@ -205,6 +207,7 @@ class InteractionBotBase(CommonBotBase):
         self._default_install_types = default_install_types
         self._default_contexts = default_contexts
 
+        # TODO: add annotations
         self._slash_command_checks = []
         self._slash_command_check_once = []
         self._user_command_checks = []
@@ -1089,7 +1092,7 @@ class InteractionBotBase(CommonBotBase):
 
     def add_app_command_check(
         self,
-        func: AppCheck,
+        func: AppCheckInput[CommandInteractionT],
         *,
         call_once: bool = False,
         slash_commands: bool = False,
@@ -1137,7 +1140,7 @@ class InteractionBotBase(CommonBotBase):
 
     def remove_app_command_check(
         self,
-        func: AppCheck,
+        func: AppCheckInput[CommandInteractionT],
         *,
         call_once: bool = False,
         slash_commands: bool = False,
@@ -1189,35 +1192,35 @@ class InteractionBotBase(CommonBotBase):
             except ValueError:
                 pass
 
-    def slash_command_check(self, func: T) -> T:
+    def slash_command_check(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check` but for slash commands."""
         # T was used instead of Check to ensure the type matches on return
-        self.add_app_command_check(func, slash_commands=True)  # type: ignore
+        self.add_app_command_check(func, slash_commands=True)
         return func
 
-    def slash_command_check_once(self, func: CFT) -> CFT:
+    def slash_command_check_once(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check_once` but for slash commands."""
         self.add_app_command_check(func, call_once=True, slash_commands=True)
         return func
 
-    def user_command_check(self, func: T) -> T:
+    def user_command_check(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check` but for user commands."""
         # T was used instead of Check to ensure the type matches on return
-        self.add_app_command_check(func, user_commands=True)  # type: ignore
+        self.add_app_command_check(func, user_commands=True)
         return func
 
-    def user_command_check_once(self, func: CFT) -> CFT:
+    def user_command_check_once(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check_once` but for user commands."""
         self.add_app_command_check(func, call_once=True, user_commands=True)
         return func
 
-    def message_command_check(self, func: T) -> T:
+    def message_command_check(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check` but for message commands."""
         # T was used instead of Check to ensure the type matches on return
-        self.add_app_command_check(func, message_commands=True)  # type: ignore
+        self.add_app_command_check(func, message_commands=True)
         return func
 
-    def message_command_check_once(self, func: CFT) -> CFT:
+    def message_command_check_once(self, func: AppCheckT) -> AppCheckT:
         """Similar to :meth:`.check_once` but for message commands."""
         self.add_app_command_check(func, call_once=True, message_commands=True)
         return func
@@ -1229,10 +1232,7 @@ class InteractionBotBase(CommonBotBase):
         slash_commands: bool = False,
         user_commands: bool = False,
         message_commands: bool = False,
-    ) -> Callable[
-        [Callable[[ApplicationCommandInteraction], Any]],
-        Callable[[ApplicationCommandInteraction], Any],
-    ]:
+    ) -> Callable[[AppCheckT], AppCheckT]:
         """A decorator that adds a global application command check to the bot.
 
         A global check is similar to a :func:`check` that is applied
@@ -1272,10 +1272,7 @@ class InteractionBotBase(CommonBotBase):
             user_commands = True
             message_commands = True
 
-        def decorator(
-            func: Callable[[ApplicationCommandInteraction], Any],
-        ) -> Callable[[ApplicationCommandInteraction], Any]:
-            # T was used instead of Check to ensure the type matches on return
+        def decorator(func: AppCheckT) -> AppCheckT:
             self.add_app_command_check(
                 func,
                 call_once=call_once,
