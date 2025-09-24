@@ -79,11 +79,18 @@ class TestCheckErrorHook:
         @bot.command()
         async def info(ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
+        # @error
+
         @info.error
         async def info_error(ctx: CustomContext, error: commands.CommandError) -> None: ...
 
         @info.error  # type: ignore  # xfail
         async def info_error2(ctx: int, error: commands.CommandError) -> None: ...
+
+        # @before_invoke
+
+        @info.before_invoke
+        async def info_hook(ctx: CustomContext) -> None: ...
 
         assert_type(
             info_error,
@@ -95,6 +102,8 @@ class TestCheckErrorHook:
             @commands.command()
             async def info(self, ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
+            # @error
+
             @info.error
             async def info_error(
                 self, ctx: CustomContext, error: commands.CommandError
@@ -102,6 +111,11 @@ class TestCheckErrorHook:
 
             @info.error  # type: ignore  # xfail
             async def info_error2(self, ctx: int, error: commands.CommandError) -> None: ...
+
+            # @before_invoke
+
+            @info.before_invoke
+            async def info_hook(self, ctx: CustomContext) -> None: ...
 
         assert_type(
             CustomCog.info_error,

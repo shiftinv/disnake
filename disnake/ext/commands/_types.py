@@ -28,7 +28,15 @@ AppCheck = Union[
     Callable[["Cog", "ApplicationCommandInteraction"], MaybeCoro[bool]],
     Callable[["ApplicationCommandInteraction"], MaybeCoro[bool]],
 ]
-Hook = Union[Callable[["Cog", "Context[Any]"], Coro[Any]], Callable[["Context[Any]"], Coro[Any]]]
+
+Hook = Union[
+    Callable[[CogT, ContextT], Coro[Any]],
+    Callable[[ContextT], Coro[Any]],
+]
+AppHook = Union[
+    Callable[[CogT, CommandInteractionT], Coro[Any]],
+    Callable[[CommandInteractionT], Coro[Any]],
+]
 
 CommandErrorT = TypeVar("CommandErrorT", bound="CommandError")
 Error = Union[

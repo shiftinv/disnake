@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
     from disnake.interactions import ApplicationCommandInteraction
 
-    from ._types import AppCheck, AppError, CommandErrorT, CommandInteractionT, Coro, Hook
+    from ._types import AppCheck, AppError, AppHook, CommandErrorT, CommandInteractionT, Coro
     from .cog import Cog
     from .interaction_bot_base import InteractionBotBase
 
@@ -68,7 +68,6 @@ __all__ = (
 T = TypeVar("T")
 AppCommandT = TypeVar("AppCommandT", bound="InvokableApplicationCommand")
 CogT = TypeVar("CogT", bound="Cog")
-HookT = TypeVar("HookT", bound="Hook")
 
 
 def _get_overridden_method(method):
@@ -204,8 +203,9 @@ class InvokableApplicationCommand(ABC):
         self.guild_ids: Optional[Tuple[int, ...]] = None
         self.auto_sync: bool = True
 
-        self._before_invoke: Optional[Hook] = None
-        self._after_invoke: Optional[Hook] = None
+        # TODO: consider making commands.*_invoke decorators work for these two hooks
+        self._before_invoke: Optional[AppHook[Cog, ApplicationCommandInteraction[Any]]] = None
+        self._after_invoke: Optional[AppHook[Cog, ApplicationCommandInteraction[Any]]] = None
 
     # this should copy all attributes that can be changed after instantiation via decorators
     def _ensure_assignment_on_copy(self, other: AppCommandT) -> AppCommandT:
@@ -606,7 +606,19 @@ class InvokableApplicationCommand(ABC):
         if hook is not None:
             await hook(inter)
 
-    def before_invoke(self, coro: HookT) -> HookT:
+    @overload
+    def before_invoke(
+        self, coro: Callable[[CogT, CommandInteractionT], Coro[T]]
+    ) -> Callable[[CogT, CommandInteractionT], Coro[T]]: ...
+
+    @overload
+    def before_invoke(
+        self, coro: Callable[[CommandInteractionT], Coro[T]]
+    ) -> Callable[[CommandInteractionT], Coro[T]]: ...
+
+    def before_invoke(
+        self, coro: AppHook[CogT, CommandInteractionT]
+    ) -> AppHook[CogT, CommandInteractionT]:
         """A decorator that registers a coroutine as a pre-invoke hook.
 
         A pre-invoke hook is called directly before the command is called.
@@ -627,10 +639,22 @@ class InvokableApplicationCommand(ABC):
             msg = "The pre-invoke hook must be a coroutine."
             raise TypeError(msg)
 
-        self._before_invoke = coro
+        self._before_invoke = cast("AppHook[Cog, ApplicationCommandInteraction[Any]]", coro)
         return coro
 
-    def after_invoke(self, coro: HookT) -> HookT:
+    @overload
+    def after_invoke(
+        self, coro: Callable[[CogT, CommandInteractionT], Coro[T]]
+    ) -> Callable[[CogT, CommandInteractionT], Coro[T]]: ...
+
+    @overload
+    def after_invoke(
+        self, coro: Callable[[CommandInteractionT], Coro[T]]
+    ) -> Callable[[CommandInteractionT], Coro[T]]: ...
+
+    def after_invoke(
+        self, coro: AppHook[CogT, CommandInteractionT]
+    ) -> AppHook[CogT, CommandInteractionT]:
         """A decorator that registers a coroutine as a post-invoke hook.
 
         A post-invoke hook is called directly after the command is called.
@@ -651,7 +675,7 @@ class InvokableApplicationCommand(ABC):
             msg = "The post-invoke hook must be a coroutine."
             raise TypeError(msg)
 
-        self._after_invoke = coro
+        self._after_invoke = cast("AppHook[Cog, ApplicationCommandInteraction[Any]]", coro)
         return coro
 
     @property

@@ -106,7 +106,6 @@ T = TypeVar("T")
 VT = TypeVar("VT")
 CommandT = TypeVar("CommandT", bound="Command")
 GroupT = TypeVar("GroupT", bound="Group")
-HookT = TypeVar("HookT", bound="Hook")
 
 
 if TYPE_CHECKING:
@@ -355,7 +354,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         parent = kwargs.get("parent")
         self.parent: Optional[GroupMixin] = parent if isinstance(parent, _BaseCommand) else None  # type: ignore
 
-        self._before_invoke: Optional[Hook] = None
+        self._before_invoke: Optional[Hook[CogT, Context[Any]]] = None
         try:
             before_invoke = func.__before_invoke__
         except AttributeError:
@@ -363,7 +362,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         else:
             self.before_invoke(before_invoke)
 
-        self._after_invoke: Optional[Hook] = None
+        self._after_invoke: Optional[Hook[CogT, Context[Any]]] = None
         try:
             after_invoke = func.__after_invoke__
         except AttributeError:
@@ -925,7 +924,17 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         """
         return hasattr(self, "on_error")
 
-    def before_invoke(self, coro: HookT) -> HookT:
+    @overload
+    def before_invoke(
+        self, coro: Callable[[CogT, ContextT], Coro[T]]
+    ) -> Callable[[CogT, ContextT], Coro[T]]: ...
+
+    @overload
+    def before_invoke(
+        self, coro: Callable[[ContextT], Coro[T]]
+    ) -> Callable[[ContextT], Coro[T]]: ...
+
+    def before_invoke(self, coro: Hook[CogT, ContextT]) -> Hook[CogT, ContextT]:
         """A decorator that registers a coroutine as a pre-invoke hook.
 
         A pre-invoke hook is called directly before the command is
@@ -950,10 +959,20 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             msg = "The pre-invoke hook must be a coroutine."
             raise TypeError(msg)
 
-        self._before_invoke = coro
+        self._before_invoke = cast("Hook[CogT, Context]", coro)
         return coro
 
-    def after_invoke(self, coro: HookT) -> HookT:
+    @overload
+    def after_invoke(
+        self, coro: Callable[[CogT, ContextT], Coro[T]]
+    ) -> Callable[[CogT, ContextT], Coro[T]]: ...
+
+    @overload
+    def after_invoke(
+        self, coro: Callable[[ContextT], Coro[T]]
+    ) -> Callable[[ContextT], Coro[T]]: ...
+
+    def after_invoke(self, coro: Hook[CogT, ContextT]) -> Hook[CogT, ContextT]:
         """A decorator that registers a coroutine as a post-invoke hook.
 
         A post-invoke hook is called directly after the command is
@@ -978,7 +997,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             msg = "The post-invoke hook must be a coroutine."
             raise TypeError(msg)
 
-        self._after_invoke = coro
+        self._after_invoke = cast("Hook[CogT, Context]", coro)
         return coro
 
     @property
