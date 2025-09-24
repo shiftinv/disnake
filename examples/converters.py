@@ -35,7 +35,7 @@ async def userinfo(ctx: commands.Context, user: disnake.User):
 
 
 @userinfo.error
-async def userinfo_error(ctx: commands.Context, error: commands.CommandError):
+async def userinfo_error(ctx: commands.Context, error: commands.CommandError) -> typing.Any:
     # If the conversion above fails for any reason, it will raise `commands.UserNotFound`
     # so we handle this in this error handler:
     if isinstance(error, commands.UserNotFound):
