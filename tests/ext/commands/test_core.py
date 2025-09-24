@@ -72,11 +72,16 @@ class TestDecorators:
             assert_type(gd(f), CustomGroup)
 
 
+async def check(ctx: CustomContext) -> bool:
+    return 1 > 0
+
+
 class TestCheckErrorHook:
     def _typing_decorator_bot(self) -> None:
         bot = commands.Bot()
 
         @bot.command()
+        @commands.check(check)
         async def info(ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
         # @error
@@ -100,6 +105,7 @@ class TestCheckErrorHook:
     def _typing_decorator_cog(self) -> None:
         class CustomCog(commands.Cog):
             @commands.command()
+            @commands.check(check)
             async def info(self, ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
             # @error
