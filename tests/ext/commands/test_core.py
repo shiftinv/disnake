@@ -86,6 +86,7 @@ class TestCheckErrorHook:
         async def info(ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
         info.add_check(check)
+        bot.check(check)
 
         # @error
 

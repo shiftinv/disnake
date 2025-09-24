@@ -41,7 +41,7 @@ T = TypeVar("T")
 CFT = TypeVar("CFT", bound="CoroFunc")
 CXT = TypeVar("CXT", bound="Context")
 
-CheckT = TypeVar("CheckT", bound="CheckInput")
+CheckT = TypeVar("CheckT", bound="CheckInput[Any]")
 
 PrefixType = Union[str, Iterable[str]]
 
