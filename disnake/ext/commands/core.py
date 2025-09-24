@@ -37,7 +37,7 @@ from disnake.utils import (
 
 from ._types import _BaseCommand
 from .cog import Cog
-from .context import Context
+from .context import AnyContext, Context
 from .converter import Greedy, get_converter, run_converters
 from .cooldowns import BucketType, Cooldown, CooldownMapping, DynamicCooldownMapping, MaxConcurrency
 from .errors import (
@@ -83,10 +83,6 @@ if TYPE_CHECKING:
         Error,
         Hook,
     )
-
-
-# FIXME: temporary replacement
-AnyContext = Context[Any]
 
 
 __all__ = (
