@@ -476,6 +476,16 @@ class InvokableApplicationCommand(ABC):
 
             await self.call_after_hooks(inter)
 
+    @overload
+    def error(
+        self, coro: Callable[[CogT, CommandInteractionT, CommandErrorT], Coro[Any]]
+    ) -> Callable[[CogT, CommandInteractionT, CommandErrorT], Coro[Any]]: ...
+
+    @overload
+    def error(
+        self, coro: Callable[[CommandInteractionT, CommandErrorT], Coro[Any]]
+    ) -> Callable[[CommandInteractionT, CommandErrorT], Coro[Any]]: ...
+
     def error(
         self, coro: AppError[CogT, CommandInteractionT, CommandErrorT]
     ) -> AppError[CogT, CommandInteractionT, CommandErrorT]:

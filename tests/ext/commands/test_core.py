@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: MIT
 
+from typing import Any, Callable
+
 from typing_extensions import assert_type
 
 import disnake
 from disnake.ext import commands
+from disnake.ext.commands._types import Coro
 from tests.helpers import reveal_type
 
 
@@ -74,10 +77,15 @@ class TestCheckErrorDecorator:
         bot = commands.Bot()
 
         @bot.command()
-        async def info(ctx: commands.Context, *, member: disnake.Member) -> None: ...
+        async def info(ctx: CustomContext, *, member: disnake.Member) -> None: ...
 
         @info.error
-        async def info_error(ctx: commands.Context, error: disnake.DiscordException) -> None: ...
+        async def info_error(ctx: CustomContext, error: commands.CommandError) -> None: ...
+
+        assert_type(
+            info_error,
+            Callable[[CustomContext, commands.CommandError], Coro[Any]],
+        )
 
     def _typing_decorator_cog(self) -> None:
         class CustomCog(commands.Cog):
@@ -86,5 +94,10 @@ class TestCheckErrorDecorator:
 
             @info.error
             async def info_error(
-                self, ctx: CustomContext, error: disnake.DiscordException
+                self, ctx: CustomContext, error: commands.CommandError
             ) -> None: ...
+
+        assert_type(
+            CustomCog.info_error,
+            Callable[[CustomCog, CustomContext, commands.CommandError], Coro[Any]],
+        )

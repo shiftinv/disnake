@@ -878,6 +878,17 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             if call_hooks:
                 await self.call_after_hooks(ctx)
 
+    # without HKT, this is as good as it gets
+    @overload
+    def error(
+        self, coro: Callable[[CogT, ContextT, CommandErrorT], Coro[Any]]
+    ) -> Callable[[CogT, ContextT, CommandErrorT], Coro[Any]]: ...
+
+    @overload
+    def error(
+        self, coro: Callable[[ContextT, CommandErrorT], Coro[Any]]
+    ) -> Callable[[ContextT, CommandErrorT], Coro[Any]]: ...
+
     def error(
         self, coro: Error[CogT, ContextT, CommandErrorT]
     ) -> Error[CogT, ContextT, CommandErrorT]:
