@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-from typing import Any, Callable
+from typing import Callable
 
 from typing_extensions import assert_type
 
@@ -84,7 +84,7 @@ class TestCheckErrorDecorator:
 
         assert_type(
             info_error,
-            Callable[[CustomContext, commands.CommandError], Coro[Any]],
+            Callable[[CustomContext, commands.CommandError], Coro[None]],
         )
 
     def _typing_decorator_cog(self) -> None:
@@ -99,5 +99,5 @@ class TestCheckErrorDecorator:
 
         assert_type(
             CustomCog.info_error,
-            Callable[[CustomCog, CustomContext, commands.CommandError], Coro[Any]],
+            Callable[[CustomCog, CustomContext, commands.CommandError], Coro[None]],
         )

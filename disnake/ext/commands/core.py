@@ -881,13 +881,13 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
     # without HKT, this is as good as it gets
     @overload
     def error(
-        self, coro: Callable[[CogT, ContextT, CommandErrorT], Coro[Any]]
-    ) -> Callable[[CogT, ContextT, CommandErrorT], Coro[Any]]: ...
+        self, coro: Callable[[CogT, ContextT, CommandErrorT], Coro[T]]
+    ) -> Callable[[CogT, ContextT, CommandErrorT], Coro[T]]: ...
 
     @overload
     def error(
-        self, coro: Callable[[ContextT, CommandErrorT], Coro[Any]]
-    ) -> Callable[[ContextT, CommandErrorT], Coro[Any]]: ...
+        self, coro: Callable[[ContextT, CommandErrorT], Coro[T]]
+    ) -> Callable[[ContextT, CommandErrorT], Coro[T]]: ...
 
     def error(
         self, coro: Error[CogT, ContextT, CommandErrorT]
