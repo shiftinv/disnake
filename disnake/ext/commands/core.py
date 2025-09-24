@@ -901,7 +901,8 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             msg = "The error handler must be a coroutine."
             raise TypeError(msg)
 
-        self.on_error: Error = coro
+        # cast due to variance issues; this is technically not quite correct, but better than a bunch of `Unknown`s
+        self.on_error = cast("Error[CogT, Context[Any], CommandError]", coro)
         return coro
 
     def has_error_handler(self) -> bool:
