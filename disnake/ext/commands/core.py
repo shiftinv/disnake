@@ -74,7 +74,6 @@ if TYPE_CHECKING:
         CheckDecorator,
         CheckInput,
         CheckPredicate,
-        CogT,
         CommandErrorT,
         CommandInteractionT,
         ContextT,
@@ -119,6 +118,7 @@ MISSING: Any = disnake.utils.MISSING
 T = TypeVar("T")
 VT = TypeVar("VT")
 CommandT = TypeVar("CommandT", bound="Command")
+CogT = TypeVar("CogT", bound="Optional[Cog]")
 GroupT = TypeVar("GroupT", bound="Group")
 
 
