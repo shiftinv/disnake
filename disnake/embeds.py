@@ -88,6 +88,8 @@ if TYPE_CHECKING:
         proxy_url: str | None
         height: int | None
         width: int | None
+        placeholder: str | None
+        placeholder_version: int | None
 
     class _EmbedVideoProxy(Sized, Protocol):
         url: str | None

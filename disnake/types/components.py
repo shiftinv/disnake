@@ -202,6 +202,8 @@ class UnfurledMediaItem(TypedDict, total=False):
     width: int | None
     content_type: str
     attachment_id: Snowflake
+    placeholder: str
+    placeholder_version: int
 
 
 # NOTE: these are type definitions for *sending*, while *receiving* likely has fewer optional fields

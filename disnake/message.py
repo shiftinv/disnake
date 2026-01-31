@@ -340,6 +340,8 @@ class Attachment(Hashable):
         "duration",
         "waveform",
         "_flags",
+        "placeholder",
+        "placeholder_version",
     )
 
     def __init__(self, *, data: AttachmentPayload, state: ConnectionState) -> None:
@@ -360,6 +362,8 @@ class Attachment(Hashable):
             b64decode(waveform_data) if (waveform_data := data.get("waveform")) else None
         )
         self._flags: int = data.get("flags", 0)
+        self.placeholder: str | None = data.get("placeholder")
+        self.placeholder_version: int | None = data.get("placeholder_version")
 
     def is_spoiler(self) -> bool:
         """Whether this attachment contains a spoiler.

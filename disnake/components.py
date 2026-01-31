@@ -1132,6 +1132,8 @@ class UnfurledMediaItem:
         "width",
         "content_type",
         "attachment_id",
+        "placeholder",
+        "placeholder_version",
     )
 
     # generally, users should also be able to pass a plain url where applicable instead of
@@ -1143,6 +1145,8 @@ class UnfurledMediaItem:
         self.width: int | None = None
         self.content_type: str | None = None
         self.attachment_id: int | None = None
+        self.placeholder: str | None = None
+        self.placeholder_version: int | None = None
 
     @classmethod
     def from_dict(cls, data: UnfurledMediaItemPayload) -> Self:
@@ -1152,6 +1156,8 @@ class UnfurledMediaItem:
         self.width = _get_as_snowflake(data, "width")
         self.content_type = data.get("content_type")
         self.attachment_id = _get_as_snowflake(data, "attachment_id")
+        self.placeholder = data.get("placeholder")
+        self.placeholder_version = data.get("placeholder_version")
         return self
 
     def to_dict(self) -> UnfurledMediaItemPayload:

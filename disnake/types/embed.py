@@ -22,6 +22,8 @@ class EmbedThumbnail(TypedDict):
     proxy_url: NotRequired[str]
     height: NotRequired[int]
     width: NotRequired[int]
+    placeholder: NotRequired[str]
+    placeholder_version: NotRequired[int]
 
 
 class EmbedVideo(TypedDict, total=False):
@@ -36,6 +38,8 @@ class EmbedImage(TypedDict):
     proxy_url: NotRequired[str]
     height: NotRequired[int]
     width: NotRequired[int]
+    placeholder: NotRequired[str]
+    placeholder_version: NotRequired[int]
 
 
 class EmbedProvider(TypedDict, total=False):
